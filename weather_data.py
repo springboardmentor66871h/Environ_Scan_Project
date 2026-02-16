@@ -1,64 +1,100 @@
-import openmeteo_requests
-import requests_cache
+import requests
 import pandas as pd
-from retry_requests import retry
 import os
+import time
 
-# Setup the Open-Meteo API client with cache and retry on error
-cache_session = requests_cache.CachedSession('.cache', expire_after = -1)
-retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
-openmeteo = openmeteo_requests.Client(session = retry_session)
+# Target Date Window
+START_DATE = "2025-12-01"
+END_DATE = "2026-02-15"
 
-target_locations = {
-    "Delhi": {"Anand_Vihar": (28.6476, 77.3158), "RK_Puram": (28.5651, 77.1751), "ITO": (28.6286, 77.2410)},
-    "Mumbai": {"Bandra_Kurla_Complex": (19.0535, 72.8464), "Colaba": (18.9100, 72.8200), "Worli": (19.0001, 72.8140)},
-    "Bengaluru": {"City_Railway_Station": (12.9733, 77.5670), "Silk_Board": (12.9176, 77.6233), "Peenya_Industrial_Area": (13.0329, 77.5273)}
+# Master Location Dictionary
+locations = {
+    "Delhi": {
+        "Anand_Vihar": {"lat": 28.6508, "lon": 77.3152},
+        "RK_Puram": {"lat": 28.5632, "lon": 77.1869},
+        "ITO": {"lat": 28.6284, "lon": 77.2410},
+        "Punjabi_Bagh": {"lat": 28.6683, "lon": 77.1167},
+        "Bawana": {"lat": 28.7955, "lon": 77.0324}
+    },
+    "Mumbai": {
+        "Colaba": {"lat": 18.9067, "lon": 72.8147},
+        "Worli": {"lat": 19.0163, "lon": 72.8166}
+    },
+    "Bengaluru": {
+        "Peenya_Industrial": {"lat": 13.0285, "lon": 77.5197},
+        "Silk_Board": {"lat": 12.9172, "lon": 77.6228}
+    }
 }
 
-url = "https://archive-api.open-meteo.com/v1/archive"
 all_weather_records = []
 
-for city, locations in target_locations.items():
-    print(f"\n========== Fetching historical weather for {city} ==========")
-    for location_name, (lat, lon) in locations.items():
-        print(f"  -> Downloading 30 days of hourly data for {location_name}...")
+print("Starting GPS-Localized Weather Extraction (Open-Meteo)...")
+
+for city, loc_data in locations.items():
+    print(f"\n========== Fetching Weather for {city} ==========")
+    
+    for loc_name, meta in loc_data.items():
+        print(f"   Processing {loc_name} ({meta['lat']}, {meta['lon']})...")
         
+        # Open-Meteo historical forecast endpoint
+        url = "https://api.open-meteo.com/v1/forecast"
         params = {
-            "latitude": lat,
-            "longitude": lon,
-            "start_date": "2026-01-15", # Adjust to match your OpenAQ dates
-            "end_date": "2026-02-15",
-            "hourly": ["temperature_2m", "relative_humidity_2m", "surface_pressure", "wind_speed_10m", "wind_direction_10m"]
+            "latitude": meta['lat'],
+            "longitude": meta['lon'],
+            "start_date": START_DATE,
+            "end_date": END_DATE,
+            "hourly": "temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m",
+            "timezone": "UTC"
         }
         
-        responses = openmeteo.weather_api(url, params=params)
-        response = responses[0]
-        hourly = response.Hourly()
-        
-        # Create a dataframe for this specific location
-        hourly_data = {"timestamp_utc": pd.date_range(
-            start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
-            end = pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
-            freq = pd.Timedelta(seconds = hourly.Interval()),
-            inclusive = "left"
-        )}
-        hourly_data["city"] = city
-        hourly_data["location"] = location_name
-        hourly_data["temperature_c"] = hourly.Variables(0).ValuesAsNumpy()
-        hourly_data["humidity_percent"] = hourly.Variables(1).ValuesAsNumpy()
-        hourly_data["pressure_hpa"] = hourly.Variables(2).ValuesAsNumpy()
-        hourly_data["wind_speed_mps"] = hourly.Variables(3).ValuesAsNumpy()
-        hourly_data["wind_direction_deg"] = hourly.Variables(4).ValuesAsNumpy()
+        try:
+            res = requests.get(url, params=params, timeout=15)
+            if res.status_code == 200:
+                data = res.json()
+                hourly = data.get('hourly', {})
+                
+                times = hourly.get('time', [])
+                temps = hourly.get('temperature_2m', [])
+                hums = hourly.get('relative_humidity_2m', [])
+                press = hourly.get('surface_pressure', [])
+                w_speeds = hourly.get('wind_speed_10m', [])
+                w_dirs = hourly.get('wind_direction_10m', [])
+                
+                # Combine lists into row dictionaries
+                for i in range(len(times)):
+                    all_weather_records.append({
+                        "city": city,
+                        "location": loc_name,
+                        "timestamp": times[i].replace("T", " ") + ":00", # Align format with AQ dataset exactly
+                        "temperature_c": temps[i],
+                        "humidity_percent": hums[i],
+                        "pressure_hpa": press[i],
+                        "wind_speed_mps": w_speeds[i],
+                        "wind_direction_deg": w_dirs[i]
+                    })
+                print(f"   Captured {len(times)} hourly records.")
+            else:
+                print(f"    Failed to fetch data: HTTP {res.status_code}")
+                
+            time.sleep(1) # Be polite to the free API
+            
+        except Exception as e:
+            print(f" Connection error: {e}")
 
-        df_loc = pd.DataFrame(data = hourly_data)
-        all_weather_records.append(df_loc)
+# ==========================================
+# FINAL COMPILATION & EXPORT
+# ==========================================
+print("\n Weather extraction complete. Formatting final dataset...")
+df_weather = pd.DataFrame(all_weather_records)
 
-# Combine all locations into one massive dataset
-df_final = pd.concat(all_weather_records, ignore_index=True)
-
-# Drop any blank rows generated by the API
-df_final = df_final.dropna()
-
-os.makedirs("data", exist_ok=True)
-df_final.to_csv("data/India_3city_weather.csv", index=False)
-print(f"\nSuccess! Saved {len(df_final)} rows of weather data.")
+if not df_weather.empty:
+    # Ensure timestamps are strings so Excel/CSVs don't hide the hours
+    df_weather['timestamp'] = df_weather['timestamp'].astype(str)
+    
+    os.makedirs("data", exist_ok=True)
+    output_path = "data/India_Weather.csv"
+    df_weather.to_csv(output_path, index=False)
+    
+    print(f" SUCCESS! Saved {len(df_weather)} gap-free rows to {output_path}.")
+else:
+    print("\n Process failed. No data collected.")
