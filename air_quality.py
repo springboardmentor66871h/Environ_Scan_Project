@@ -2,109 +2,138 @@ import requests
 import pandas as pd
 import os
 import time
+from datetime import datetime
 from dotenv import load_dotenv
 import urllib3
 
-# Suppress warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
-API_KEY = os.getenv("OPENAQ_API_KEY").strip()
-headers = {"X-API-Key": API_KEY, "Accept": "application/json"}
+# Credentials
+OPENAQ_KEY = os.getenv("OPENAQ_API_KEY").strip()
+OWM_KEY = os.getenv("OPENWEATHER_API_KEY").strip()
 
-location_mapping = {
+# Target Date Window
+START_DATE = "2025-12-01T00:00:00Z"
+END_DATE = "2026-02-15T23:59:59Z"
+
+# Convert to UNIX timestamps for OpenWeatherMap
+start_unix = int(datetime.strptime(START_DATE, "%Y-%m-%dT%H:%M:%SZ").timestamp())
+end_unix = int(datetime.strptime(END_DATE, "%Y-%m-%dT%H:%M:%SZ").timestamp())
+
+# Master Location Dictionary (Expanded for Delhi's Top Stations)
+locations = {
     "Delhi": {
-        "Anand_Vihar": "anand vihar",
-        "RK_Puram": "r k puram", 
-        "ITO": "ito"
+        "Anand_Vihar": {"keyword": "anand vihar", "lat": 28.6508, "lon": 77.3152},
+        "RK_Puram": {"keyword": "r k puram", "lat": 28.5632, "lon": 77.1869},
+        "ITO": {"keyword": "ito", "lat": 28.6284, "lon": 77.2410},
+        "Punjabi_Bagh": {"keyword": "punjabi bagh", "lat": 28.6683, "lon": 77.1167},
+        "Bawana": {"keyword": "bawana", "lat": 28.7955, "lon": 77.0324}
     },
-   "Mumbai": {
-        "Bandra_Kurla_Complex": "bandra kurla complex", 
-        "Colaba": "colaba",                           
-        "Worli": "worli"                              
+    "Mumbai": {
+        "Colaba": {"keyword": "colaba", "lat": 18.9067, "lon": 72.8147},
+        "Worli": {"keyword": "worli", "lat": 19.0163, "lon": 72.8166}
     },
     "Bengaluru": {
-        "City_Railway_Station": "city railway station",
-        "Silk_Board": "btm layout",
-        "Peenya_Industrial_Area": "peenya"
+        "Peenya_Industrial": {"keyword": "peenya", "lat": 13.0285, "lon": 77.5197},
+        "Silk_Board": {"keyword": "btm layout", "lat": 12.9172, "lon": 77.6228}
     }
 }
 
-allowed_params = {'pm25', 'pm10', 'no2', 'co', 'so2', 'o3'}
-all_records = []
+allowed_params = ['pm25', 'pm10', 'no2', 'co', 'so2', 'o3']
+all_hybrid_records = []
 
-for city, locations in location_mapping.items():
-    print(f"\n========== Searching for stations in {city} ==========")
+print(" Starting Hybrid API Data Fusion (OpenAQ + OpenWeatherMap)...")
+
+for city, loc_data in locations.items():
+    print(f"\n========== {city} ==========")
     
-    loc_params = {"iso": "IN", "locality": city, "limit": 1000}
-    loc_res = None
-    
-    for attempt in range(3):
-        try:
-            loc_res = requests.get("https://api.openaq.org/v3/locations", headers=headers, params=loc_params, verify=False, timeout=15)
-            break 
-        except Exception as e:
-            print(f" City fetch glitch (Attempt {attempt+1}/3). Retrying...")
-            time.sleep(2)
-            
-    if not loc_res or loc_res.status_code != 200:
-        print(f" Failed to fetch {city} after 3 attempts.")
-        continue
+    # 1. Fetch OpenAQ City Base
+    openaq_headers = {"X-API-Key": OPENAQ_KEY, "Accept": "application/json"}
+    loc_res = requests.get("https://api.openaq.org/v3/locations", headers=openaq_headers, params={"iso": "IN", "locality": city, "limit": 1000}, verify=False)
+    available_locs = loc_res.json().get('results', []) if loc_res.status_code == 200 else []
 
-    available_locs = loc_res.json().get('results', [])
+    for loc_name, meta in loc_data.items():
+        print(f"\n Processing {loc_name}...")
+        
+        # Dictionary to temporarily hold hourly data for this specific location
+        hourly_data = {}
 
-    for osmnx_name, search_keyword in locations.items():
-        match = next((l for l in available_locs if search_keyword in l['name'].lower()), None)
+        # ==========================================
+        # SOURCE 1: OPENWEATHERMAP (The Flawless Baseline)
+        # ==========================================
+        owm_url = f"http://api.openweathermap.org/data/2.5/air_pollution/history?lat={meta['lat']}&lon={meta['lon']}&start={start_unix}&end={end_unix}&appid={OWM_KEY}"
+        owm_res = requests.get(owm_url)
+        
+        if owm_res.status_code == 200:
+            for item in owm_res.json().get('list', []):
+                dt = pd.to_datetime(item['dt'], unit='s', utc=True).floor('h')
+                comps = item['components']
+                
+                hourly_data[dt] = {
+                    "city": city,
+                    "location": loc_name,
+                    "timestamp": dt,
+                    "pm25": comps.get('pm2_5'),
+                    "pm10": comps.get('pm10'),
+                    "no2": comps.get('no2'),
+                    "co": comps.get('co'),
+                    "so2": comps.get('so2'),
+                    "o3": comps.get('o3')
+                }
+            print(f" OWM Data: Captured {len(hourly_data)} flawless hours.")
+        else:
+            print(f" OWM Data: Failed to fetch.")
 
+        # ==========================================
+        # SOURCE 2: OPENAQ (The Ground-Truth Override)
+        # ==========================================
+        match = next((l for l in available_locs if meta['keyword'] in l['name'].lower()), None)
+        
         if match:
-            print(f" Found {osmnx_name} -> {match['name']}")
-            
+            openaq_points = 0
             for sensor in match.get('sensors', []):
-                p_name = sensor['parameter']['name'].lower()
+                p_name = sensor['parameter']['name'].lower().replace('pm2.5', 'pm25')
                 
                 if p_name in allowed_params:
                     meas_url = f"https://api.openaq.org/v3/sensors/{sensor['id']}/measurements"
-                    m_res = None
+                    m_params = {"limit": 1000, "datetime_from": START_DATE, "datetime_to": END_DATE}
                     
-                    # FIX: Force the API to pull recent data matching your weather dates exactly
-                   # FIX: Correct parameter names according to OpenAQ v3 docs
-                    meas_params = {
-                        "limit": 500,
-                        "datetime_from": "2026-01-15T00:00:00Z",
-                        "datetime_to": "2026-02-15T23:59:59Z"
-                    }
-                    for attempt in range(3):
-                        try:
-                            m_res = requests.get(meas_url, headers=headers, params=meas_params, verify=False, timeout=10)
-                            break
-                        except Exception as e:
-                            time.sleep(1) 
+                    m_res = requests.get(meas_url, headers=openaq_headers, params=m_params, verify=False)
+                    if m_res.status_code == 200:
+                        for item in m_res.json().get('results', []):
+                            dt = pd.to_datetime(item['period']['datetimeTo']['utc']).floor('h')
+                            val = item['value']
                             
-                    if m_res and m_res.status_code == 200:
-                        data = m_res.json().get('results', [])
-                        print(f"    - {p_name}: {len(data)} rows")
-                        
-                        for item in data:
-                            all_records.append({
-                                "city": city,
-                                "location": osmnx_name, 
-                                "parameter": p_name.replace('pm2.5', 'pm25'), 
-                                "value": item['value'],
-                                "unit": sensor['parameter']['units'],
-                                "timestamp": item.get('period', {}).get('datetimeTo', {}).get('utc')
-                            })
-                    else:
-                        print(f" Failed to fetch {p_name} after retries.")
+                            # If this hour exists in our OWM baseline, override it with the real OpenAQ ground truth!
+                            if dt in hourly_data:
+                                hourly_data[dt][p_name] = val
+                                openaq_points += 1
+            print(f" OpenAQ Data: Injected {openaq_points} physical sensor readings.")
         else:
-            print(f" No match found for {osmnx_name}")
+            print(f" OpenAQ Data: Sensor offline/missing. Relying entirely on OWM satellite data.")
 
-df = pd.DataFrame(all_records)
+        # Add all processed hours for this location into the master list
+        all_hybrid_records.extend(list(hourly_data.values()))
 
-if not df.empty:
-    df_clean = df.groupby(['city', 'location', 'parameter', 'unit', 'timestamp'], as_index=False)['value'].mean()
+# ==========================================
+# FINAL COMPILATION & EXPORT
+# ==========================================
+print("\n Fusion complete. Formatting final dataset...")
+df_hybrid = pd.DataFrame(all_hybrid_records)
+
+if not df_hybrid.empty:
+    # 1. Strip the timezone
+    df_hybrid['timestamp'] = df_hybrid['timestamp'].dt.tz_localize(None)
+    
+    # 2. Convert to a string so the time doesn't get hidden
+    df_hybrid['timestamp'] = df_hybrid['timestamp'].astype(str)
+    
+    # Save directly to CSV (Changed from Excel to CSV)
     os.makedirs("data", exist_ok=True)
-    output_path = "data/India_3city_air_quality.csv"
-    df_clean.to_csv(output_path, index=False)
-    print(f"\n Saved {len(df_clean)} rows to {output_path}.")
+    output_path = "data/India_Air_Quality.csv"
+    df_hybrid.to_csv(output_path, index=False)
+    
+    print(f"SUCCESS! Saved {len(df_hybrid)} gap-free rows to {output_path}.")
 else:
-    print("\nNo data collected.")
+    print("\nProcess failed. No data collected.")
