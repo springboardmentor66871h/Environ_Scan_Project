@@ -1,10 +1,12 @@
 import osmnx as ox
 import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point
 import os
 import warnings
 from datetime import datetime
 
-# Suppress OSMnx UserWarnings for clean terminal output
+# Suppress warnings
 warnings.filterwarnings('ignore')
 
 # Master Location Dictionary
@@ -26,71 +28,74 @@ locations = {
     }
 }
 
-# CHANGED: The radius around the sensor to scan (5000 meters = 5km)
-RADIUS = 5000 
+# Search radius (5km). If nothing is found within this radius, we cap the distance at 5000m.
+SEARCH_RADIUS = 5000 
 extraction_timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 all_features = []
 
-print(f"Starting OSMnx Spatial Extraction ({RADIUS/1000}km radius)... This may take a few minutes.")
+print(" Starting Advanced Proximity Analysis (Distance to Nearest Features)...")
+
+def get_nearest_distance(point, tags, radius):
+    """Fetches features and calculates distance to the nearest one in meters."""
+    try:
+        # Fetch features within radius
+        gdf = ox.features_from_point(point, tags=tags, dist=radius)
+        if gdf.empty:
+            return radius # If none found, assume it's at least 'radius' meters away
+        
+        # Create a GeoSeries for our sensor point (Longitude first for Shapely)
+        sensor_point = gpd.GeoSeries([Point(point[1], point[0])], crs="EPSG:4326")
+        
+        # Project both the sensor and the map features to meters (EPSG:3857)
+        sensor_projected = sensor_point.to_crs("EPSG:3857").iloc[0]
+        gdf_projected = gdf.to_crs("EPSG:3857")
+        
+        # Calculate distances from sensor to all features and find the minimum
+        distances = gdf_projected.distance(sensor_projected)
+        return round(distances.min(), 2)
+    except Exception:
+        return radius # Fallback if API fails or no data
 
 for city, loc_data in locations.items():
     print(f"\n========== Scanning {city} ==========")
     
     for loc_name, meta in loc_data.items():
-        print(f" Extracting geography for {loc_name}...")
+        print(f"  Calculating proximities for {loc_name}...")
         point = (meta['lat'], meta['lon'])
         
-        # Base dictionary for this location (Updated to 5km)
         features = {
             "city": city,
             "location": loc_name,
             "latitude": meta['lat'],
             "longitude": meta['lon'],
-            "timestamp": extraction_timestamp,
-            "major_roads_within_5km": 0,
-            "industrial_zones_within_5km": 0,
-            "farmland_within_5km": 0,
-            "waste_dumps_within_5km": 0
+            "timestamp": extraction_timestamp
         }
         
-        # 1. ROADS (Major traffic arteries only)
-        try:
-            tags_roads = {'highway': ['trunk', 'primary', 'secondary', 'motorway']}
-            roads = ox.features_from_point(point, tags=tags_roads, dist=RADIUS)
-            features["major_roads_within_5km"] = len(roads)
-        except Exception: pass
+        # 1. Distance to Nearest Major Road
+        tags_roads = {'highway': ['trunk', 'primary', 'secondary', 'motorway']}
+        features["dist_to_road_m"] = get_nearest_distance(point, tags_roads, SEARCH_RADIUS)
         
-        # 2. INDUSTRIAL ZONES
-        try:
-            tags_ind = {'landuse': ['industrial', 'brownfield']}
-            industrial = ox.features_from_point(point, tags=tags_ind, dist=RADIUS)
-            features["industrial_zones_within_5km"] = len(industrial)
-        except Exception: pass
+        # 2. Distance to Nearest Industrial Zone
+        tags_ind = {'landuse': ['industrial', 'brownfield']}
+        features["dist_to_industry_m"] = get_nearest_distance(point, tags_ind, SEARCH_RADIUS)
 
-        # 3. AGRICULTURAL / FARMLAND
-        try:
-            tags_farm = {'landuse': ['farmland', 'orchard', 'plant_nursery']}
-            farm = ox.features_from_point(point, tags=tags_farm, dist=RADIUS)
-            features["farmland_within_5km"] = len(farm)
-        except Exception: pass
+        # 3. Distance to Nearest Agricultural/Farmland
+        tags_farm = {'landuse': ['farmland', 'orchard']}
+        features["dist_to_farm_m"] = get_nearest_distance(point, tags_farm, SEARCH_RADIUS)
 
-        # 4. WASTE DUMPS / LANDFILLS
-        try:
-            tags_waste = {'landuse': ['landfill'], 'amenity': ['waste_disposal']}
-            waste = ox.features_from_point(point, tags=tags_waste, dist=RADIUS)
-            features["waste_dumps_within_5km"] = len(waste)
-        except Exception: pass
+        # 4. Distance to Nearest Waste Dump
+        tags_waste = {'landuse': ['landfill'], 'amenity': ['waste_disposal']}
+        features["dist_to_waste_m"] = get_nearest_distance(point, tags_waste, SEARCH_RADIUS)
 
-        # Append to master list
         all_features.append(features)
-        print(f"  Found {features['major_roads_within_5km']} roads, {features['industrial_zones_within_5km']} industrial zones, {features['farmland_within_5km']} farms, {features['waste_dumps_within_5km']} dumpsites.")
+        print(f"  Nearest Road: {features['dist_to_road_m']}m | Industry: {features['dist_to_industry_m']}m")
 
 # ==========================================
 # EXPORT
 # ==========================================
 df_spatial = pd.DataFrame(all_features)
 os.makedirs("data", exist_ok=True)
-output_path = "data/India_Spatial_Features.csv"
+output_path = "data/India_Spatial_Distances.csv"
 df_spatial.to_csv(output_path, index=False)
 
-print(f"\n SUCCESS! Spatial features saved to {output_path}")
+print(f"\nSUCCESS! Proximity features saved to {output_path}")
