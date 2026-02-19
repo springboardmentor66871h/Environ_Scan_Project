@@ -56,9 +56,9 @@ data/
 ├── raw/
 └── processed/
 
----
 
-# 🌐 Milestone 1 – Week 2  
+
+🌐 Milestone 1 – Week 2  
 ## Geospatial Feature Engineering & Data Merging
 
 ### Key Improvements
@@ -122,15 +122,15 @@ Since real-world ground truth labels were unavailable, rule-based labeling was i
 - Real-world deployment would require validated emission inventory data.
 
 
-# 📊 Label Distribution
+ 📊 Label Distribution
 A visualization of source distribution is included in: data/processed/label_distribution.png
 
 
-# 🔒 Security Update
+🔒 Security Update
 API keys are stored using environment variables and are not included in this repository.
 
 
-# 📅 Next Phase
+📅 Next Phase
 Milestone 3 (Week 4):
 - Model Training
 - Classification using ML algorithms
@@ -139,6 +139,6 @@ Milestone 3 (Week 4):
 
 
 
-# 👩‍💻 Author
+👩‍💻 Author
 Rushda – CSE (Data Science)
 
