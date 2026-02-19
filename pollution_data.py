@@ -6,9 +6,12 @@ from datetime import datetime
 # ==========================================
 # CONFIGURATION
 # ==========================================
+#import os
 
-API_KEY = "6a9c292db00cdb409f503e8084e58915"
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
+if API_KEY is None:
+    raise ValueError("OPENWEATHER_API_KEY not set in environment variables")
 BASE_PATH = r"D:\ENVIRON-SCAN"
 RAW_PATH = os.path.join(BASE_PATH, "data", "raw")
 os.makedirs(RAW_PATH, exist_ok=True)
