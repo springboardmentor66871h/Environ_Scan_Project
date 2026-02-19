@@ -58,7 +58,7 @@ data/
 
 
 
-🌐 Milestone 1 – Week 2  
+# 🌐 Milestone 1 – Week 2  
 ## Geospatial Feature Engineering & Data Merging
 
 ### Key Improvements
