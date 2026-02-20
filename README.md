@@ -47,3 +47,39 @@ Due to the massive size (**~2 Million rows**), the processed dataset is split in
 * **Data Loading:** Stitching `part1` and `part2` back into a single Dataframe.
 * **Model Training:** Training Random Forest / XGBoost classifiers to predict pollution sources.
 * **Evaluation:** Assessing model accuracy and feature importance.
+
+## 🏷️ Milestone 2: Source Labeling & Simulation (Week 3)
+
+### 1. The Core Problem & Solution
+Our dataset lacks a ground-truth `pollution_source` target variable. To prepare for supervised machine learning in Week 4, we utilized **Rule-Based Weak Supervision** to simulate labels based on environmental logic, chemical signatures, and geospatial proximity. 
+
+**Note: This is simulated labeling due to the absence of real-world ground-truth data.**
+
+### 2. Rule-Based Labeling Logic & Thresholds
+Because this is a national dataset spanning 241 cities, static thresholds (e.g., exactly 40 µg/m³) fail due to regional baselines. Instead, we used **Dynamic Quantile Thresholding** to capture "High" and "Low" spikes relative to the overall dataset.
+
+**The Rules:**
+1. **Vehicular:** `NO2 >= 60th percentile` AND `Distance to Road <= 500m`
+   * *Logic:* Combustion engines produce high NO2; proximity confirms local traffic.
+2. **Industrial:** `SO2 >= 60th percentile` AND `Distance to Industry <= 3000m`
+   * *Logic:* Fossil fuel/smelting produces SO2; industrial zones have wider dispersion radiuses.
+3. **Agricultural:** `PM10 >= 60th percentile` AND `NO2 <= 40th percentile` AND `Distance to Farmland <= 2500m`
+   * *Logic:* Coarse dust without combustion gases signifies soil resuspension or harvest activity.
+4. **Burning:** `PM2.5 >= 75th percentile` AND `Distance to Dump <= 6000m`
+   * *Logic:* Fine particulate matter spikes indicate biomass or waste burning.
+5. **Natural:** `PM10 >= 60th percentile` AND `PM2.5 <= 40th percentile`
+   * *Logic:* High coarse dust but low fine particles signifies windblown soil or pollen, not combustion.
+
+### 3. Label Distribution & Validation
+The heuristic script successfully categorized over 800,000 distinct pollution events. 
+
+* **Vehicular:** ~399k
+* **Industrial:** ~247k
+* **Burning:** ~102k
+* **Agricultural:** ~54k
+* **Natural:** ~19k
+* **Mixed/Unknown:** ~1.13M *(Kept to represent background/mixed air, but will be filtered/downsampled during model training to ensure strong signal learning).*
+
+### 4. Assumptions & Limitations
+* **Assumptions:** We assume that a chemical spike occurring near a known geospatial feature is caused by that feature. 
+* **Limitations:** Wind direction was not fully integrated into this specific rule engine due to the complexity of reverse-trajectory mapping at a national scale, leading to a high number of "Mixed/Unknown" tags. The simulated geospatial distances act as placeholders to establish the ML pipeline schema.
