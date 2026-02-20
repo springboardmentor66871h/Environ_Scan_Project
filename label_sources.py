@@ -52,14 +52,29 @@ df.loc[cond_vehicular, 'pollution_source'] = 'Vehicular'
 
 # Validation: Check Distribution
 dist = df['pollution_source'].value_counts()
-print("\n📊 Final Label Distribution:")
-print(dist)
+percentages = (dist / len(df)) * 100
+
+print("\n📊 Final Label Distribution (Counts & Percentages):")
+for idx, val in dist.items():
+    print(f"{idx}: {val} ({percentages[idx]:.1f}%)")
 
 # Plot and Save Bar Chart
 plt.figure(figsize=(10,6))
-dist.plot(kind='bar', color=['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#95a5a6'])
+# Create the bar chart and store it in 'ax'
+ax = dist.plot(kind='bar', color=['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#95a5a6'])
 plt.title('Simulated Pollution Source Distribution (EnviroScan)')
 plt.ylabel('Number of Records')
+
+# Add percentage labels on top of each bar
+for p in ax.patches:
+    height = p.get_height()
+    percentage = f'{(height/len(df))*100:.1f}%'
+    ax.annotate(percentage, 
+                (p.get_x() + p.get_width() / 2., height), 
+                ha='center', va='bottom', 
+                fontsize=10, color='black', xytext=(0, 2), 
+                textcoords='offset points')
+
 plt.xticks(rotation=45)
 plt.tight_layout()
 chart_path = os.path.join(OUTPUT_DIR, 'source_distribution.png')
