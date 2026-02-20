@@ -1,0 +1,162 @@
+# EnviroScan — Data Collection & Preparation (Week 1)
+
+## Overview
+
+This project compiles air pollution, weather, and location-based environmental features into a unified dataset for multi-city analysis across India. The goal of Week 1 is **data correctness, consistency, and organization** — no modeling or dashboards yet.
+
+The final output is a merged dataset combining:
+
+* Air pollution measurements
+* Daily weather parameters
+* Synthetic location-based distance features
+
+---
+
+## Data Sources
+
+### 1) Air Pollution Data
+
+**Source:** Central Pollution Control Board (CPCB)
+**Parameters Collected:** PM2.5, PM10, NO₂, CO, SO₂, O₃
+**Time Range:** 01 Jan 2025 (00:00) → 17 Feb 2026 (00:00)
+**Sampling:** Hourly observations aggregated per station
+
+**Stations & Records**
+
+* Delhi — Anand Vihar (DPCC): 399 rows
+* Bengaluru — Peenya Industrial Area: 430 rows
+* Bhopal — T.T. Nagar: 430 rows
+* Mumbai — Sion: 430 rows
+* Kolkata: 430 rows
+* Chennai: 430 rows
+* Lucknow: 430 rows
+* Hyderabad: 430 rows
+* Ahmedabad — SAC ISRO IITM: 430 rows
+
+Each record contains:
+
+* Station / City
+* Latitude, Longitude
+* Timestamp
+* Pollutant name and value
+
+All station files were cleaned and merged into a single pollution dataset.
+
+---
+
+### 2) Weather Data
+
+**Source:** NASA POWER (Langley Research Center)
+**Parameters Collected:**
+
+* Temperature (T2M)
+* Relative Humidity (RH2M)
+* Wind Speed (WS2M)
+
+**Total Records:** 4,130
+**Stations (10):**
+
+* DELHI_CHANDNI_CHOWK (28.6560, 77.2300)
+* DELHI_ANANT_VIHAR (28.6469, 77.3153)
+* BHOPAL (23.2336, 77.4009)
+* MUMBAI (19.0470, 72.8746)
+* KOLKATA (22.6270, 88.3800)
+* BENGALURU (13.0280, 77.5180)
+* CHENNAI (13.1660, 80.2580)
+* LUCKNOW (26.8467, 80.9462)
+* HYDERABAD (17.5416, 78.4840)
+* AHMEDABAD (23.0300, 72.5400)
+
+Weather data was fetched for the **same date range** as pollution data to ensure temporal consistency.
+
+---
+
+### 3) Location-Based Features
+
+**Method:** Synthetic feature generation using station coordinates
+**Derived Features:**
+
+* Distance to nearest major road
+* Distance to industrial zone
+* Distance to dump site
+* Distance to agricultural land
+
+These features approximate environmental exposure factors for each station.
+
+---
+
+## Data Processing Pipeline
+
+### Step 1 — Cleaning
+
+* Removed null / missing values
+* Standardized column names (lowercase, trimmed)
+* Standardized timestamps to datetime format
+* Ensured consistent latitude & longitude across datasets
+
+### Step 2 — Merging Strategy
+
+1. Pollution dataset merged with weather dataset using **date**
+2. Location features merged using **station name**
+3. Result stored as final unified dataset
+
+### Step 3 — Output
+
+Final dataset contains:
+
+* Pollution metrics
+* Weather variables
+* Spatial/environmental features
+
+---
+
+## Folder Structure
+
+```
+Environ_Scan_Project/
+│
+├── data/
+│   ├── raw/
+│   │   ├── pollution_cleaned.csv
+│   │   ├── weather_data.csv
+│   │   └── location_features.csv
+│   │
+│   └── processed/
+│       └── enviro_dataset.csv
+│
+├── scripts/
+│   ├── collect_pollution.py
+│   ├── collect_weather.py
+│   ├── synthetic_locationdata.py
+│   ├── clean_pollution.py
+│   ├── weatherclean.py
+│   └── combined.py
+│
+└── README.md
+```
+
+---
+
+## Final Deliverables
+
+✔ Pollution dataset (CSV)
+✔ Weather dataset (CSV)
+✔ Location features dataset (CSV)
+✔ Final merged dataset (CSV)
+✔ Data collection documentation
+
+---
+
+## Notes on Data Quality
+
+* Some timestamps were missing in source pollution files and were removed.
+* Location features are synthetic approximations.
+* All datasets share consistent station names and date formats.
+* No modeling or prediction was performed in this stage.
+
+---
+
+## Project Status
+
+Week 1 data engineering pipeline completed successfully.
+Dataset is ready for exploratory analysis and modeling in the next phase.
