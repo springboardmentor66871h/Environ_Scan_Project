@@ -15,35 +15,36 @@ df2 = pd.read_csv(INPUT_FILE_2)
 df = pd.concat([df1, df2], ignore_index=True)
 print(f"✅ Loaded {len(df)} rows.")
 
-print(" Calculating dynamic thresholds for labeling...")
-# Using quantiles ensures our labels are evenly distributed across the 1.9M rows
-no2_high = df['no2'].quantile(0.60)
-no2_low = df['no2'].quantile(0.40)
-so2_high = df['so2'].quantile(0.60)
-pm10_high = df['pm10'].quantile(0.60)
-pm25_very_high = df['pm25'].quantile(0.75)
-pm25_low = df['pm25'].quantile(0.40)
+print("🧠 Calculating sensitive dynamic thresholds for labeling...")
+# lowered from 60th percentile to 35th/40th to capture more data
+no2_high = df['no2'].quantile(0.35)  
+so2_high = df['so2'].quantile(0.35)  
+pm10_high = df['pm10'].quantile(0.40) 
+pm25_high = df['pm25'].quantile(0.40) 
 
-print("🏷️ Applying Rule-Based Heuristics (as per PPT)...")
-# Initialize the column
+# Raised the "low" thresholds so more data passes the check
+pm25_low = df['pm25'].quantile(0.60)  
+no2_low = df['no2'].quantile(0.60)    
+
+print("🏷️ Applying Expanded Rule-Based Heuristics...")
 df['pollution_source'] = 'Mixed/Unknown'
 
-# 1. Vehicular: High NO2 + Close to road (< 500m)
-cond_vehicular = (df['no2'] >= no2_high) & (df['distance_to_road'] <= 500)
+# 1. Vehicular: Moderate/High NO2 + Wider road radius (< 700m)
+cond_vehicular = (df['no2'] >= no2_high) & (df['distance_to_road'] <= 700)
 
-# 2. Industrial: High SO2 + Close to Industry (< 3000m)
-cond_industrial = (df['so2'] >= so2_high) & (df['distance_to_industry'] <= 3000)
+# 2. Industrial: Moderate/High SO2 + Wider industry radius (< 4500m)
+cond_industrial = (df['so2'] >= so2_high) & (df['distance_to_industry'] <= 4500)
 
-# 3. Agricultural: High PM10 + Low NO2 + Close to Farmland (< 2500m)
-cond_agri = (df['pm10'] >= pm10_high) & (df['no2'] <= no2_low) & (df['distance_to_farmland'] <= 2500)
+# 3. Agricultural: Moderate/High PM10 + Low NO2 + Wider farm radius (< 3500m)
+cond_agri = (df['pm10'] >= pm10_high) & (df['no2'] <= no2_low) & (df['distance_to_farmland'] <= 3500)
 
-# 4. Burning: Very high PM25 + Close to Dump (< 6000m)
-cond_burning = (df['pm25'] >= pm25_very_high) & (df['distance_to_dump'] <= 6000)
+# 4. Burning: Moderate/High PM25 + Wider dump radius (< 8000m)
+cond_burning = (df['pm25'] >= pm25_high) & (df['distance_to_dump'] <= 8000)
 
-# 5. Natural: High PM10 + Low PM25
+# 5. Natural: Moderate PM10 + Lower PM25
 cond_natural = (df['pm10'] >= pm10_high) & (df['pm25'] <= pm25_low)
 
-# Apply labels sequentially (Priority matters)
+# Apply labels (Priority matters - Natural gets overwritten by more specific sources if they overlap)
 df.loc[cond_natural, 'pollution_source'] = 'Natural'
 df.loc[cond_agri, 'pollution_source'] = 'Agricultural'
 df.loc[cond_burning, 'pollution_source'] = 'Burning'
@@ -60,7 +61,6 @@ for idx, val in dist.items():
 
 # Plot and Save Bar Chart
 plt.figure(figsize=(10,6))
-# Create the bar chart and store it in 'ax'
 ax = dist.plot(kind='bar', color=['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#95a5a6'])
 plt.title('Simulated Pollution Source Distribution (EnviroScan)')
 plt.ylabel('Number of Records')
