@@ -117,19 +117,17 @@ Environ_Scan_Project/
 │
 ├── data/
 │   ├── raw/
-│   │   ├── pollution_cleaned.csv
+│   │   ├── pollution_data.csv
 │   │   ├── weather_data.csv
 │   │   └── location_features.csv
 │   │
 │   └── processed/
-│       └── enviro_dataset.csv
+│       └── enviro_merge_dataset.csv
 │
 ├── scripts/
-│   ├── collect_pollution.py
 │   ├── collect_weather.py
 │   ├── synthetic_locationdata.py
-│   ├── clean_pollution.py
-│   ├── weatherclean.py
+│   ├── pollutioncleaned.py
 │   └── combined.py
 │
 └── README.md
