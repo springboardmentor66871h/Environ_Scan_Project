@@ -7,90 +7,102 @@ print("Creating distance-based location features...")
 # 1️⃣ Station coordinates (CPCB stations)
 # =========================
 stations = {
-    "Delhi_ChandniChowk": (28.6560, 77.2300),
-    "Delhi_AnandVihar": (28.6469, 77.3153),  # ✅ ADD THIS
-    "Bhopal_TTNagar": (23.2336, 77.4009),
-    "Mumbai_Sion": (19.0470, 72.8746),
-    "Kolkata_RabindraBharati": (22.6270, 88.3800),
-    "Bengaluru_Peenya": (13.0280, 77.5180),
-    "Chennai_Manali": (13.1660, 80.2580),
-    "Lucknow_Talkatora": (26.8467, 80.9462),
-    "Hyderabad_Bollaram": (17.5416, 78.4840),
-    "Ahmedabad_SAC_ISRO_IITM": (23.0300, 72.5400)
+    "DELHI_CHANDINI_CHOWK": (28.6560, 77.2300),
+    "DELHI_ANANT_VIHAR": (28.6469, 77.3153),
+    "BHOPAL": (23.2336, 77.4009),
+    "MUMBAI": (19.0470, 72.8746),
+    "KOLKATA": (22.6270, 88.3800),
+    "BENGELURU": (13.0280, 77.5180),
+    "CHENNAI": (13.1660, 80.2580),
+    "LUCKNOW": (26.8467, 80.9462),
+    "HYDERABAD": (17.5416, 78.4840),
+    "AHEMEDABAD": (23.0300, 72.5400)
 }
 
-
-
 # =========================
-# 2️⃣ Feature coordinates
-# (representative nearby sources)
+# 2️⃣ City-specific feature anchors
 # =========================
 features = {
-    "major_road": [
-        (28.6448, 77.2167),
-        (19.0760, 72.8777),
-        (13.0827, 80.2707)
-    ],
+    "major_road": {
+        "DELHI_CHANDINI_CHOWK": (28.6448, 77.2167),
+        "DELHI_ANANT_VIHAR": (28.6505, 77.3150),
+        "BHOPAL": (23.2599, 77.4126),
+        "MUMBAI": (19.0760, 72.8777),
+        "KOLKATA": (22.5726, 88.3639),
+        "BENGELURU": (13.0285, 77.5460),
+        "CHENNAI": (13.0827, 80.2707),
+        "LUCKNOW": (26.8467, 80.9462),
+        "HYDERABAD": (17.3850, 78.4867),
+        "AHEMEDABAD": (23.0225, 72.5714)
+    },
 
-    "industrial_zone": [
-        (13.0310, 77.5150),   # Peenya
-        (17.5400, 78.4700),   # Bollaram
-        (13.1663, 80.2630)    # Manali
-    ],
+    "industrial_zone": {
+        "DELHI_CHANDINI_CHOWK": (28.6700, 77.2600),
+        "DELHI_ANANT_VIHAR": (28.6600, 77.3300),
+        "BHOPAL": (23.2500, 77.4500),
+        "MUMBAI": (19.0600, 72.8800),
+        "KOLKATA": (22.5600, 88.3900),
+        "BENGELURU": (13.0310, 77.5150),
+        "CHENNAI": (13.1663, 80.2630),
+        "LUCKNOW": (26.9000, 80.9500),
+        "HYDERABAD": (17.5400, 78.4700),
+        "AHEMEDABAD": (23.0300, 72.5400)
+    },
 
-    "dump_site": [
-        (28.6140, 77.2510),   # Delhi landfill region
-        (19.0500, 72.8700),   # Mumbai dumping zone
-        (22.5700, 88.3600)    # Kolkata waste region
-    ],
+    "dump_site": {
+        "DELHI_CHANDINI_CHOWK": (28.6140, 77.2510),
+        "DELHI_ANANT_VIHAR": (28.6300, 77.3000),
+        "BHOPAL": (23.2300, 77.4200),
+        "MUMBAI": (19.0500, 72.8700),
+        "KOLKATA": (22.5700, 88.3600),
+        "BENGELURU": (13.0000, 77.5200),
+        "CHENNAI": (13.1500, 80.2500),
+        "LUCKNOW": (26.8500, 80.9300),
+        "HYDERABAD": (17.5200, 78.4800),
+        "AHEMEDABAD": (23.0200, 72.5500)
+    },
 
-    "farmland": [
-        (26.8800, 80.9000),
-        (23.2500, 77.4200),
-        (22.7000, 88.3000)
-    ]
+    "farmland": {
+        "DELHI_CHANDINI_CHOWK": (28.7500, 77.2000),
+        "DELHI_ANANT_VIHAR": (28.7200, 77.3500),
+        "BHOPAL": (23.2500, 77.4200),
+        "MUMBAI": (19.2000, 72.9000),
+        "KOLKATA": (22.7000, 88.3000),
+        "BENGELURU": (13.2000, 77.6000),
+        "CHENNAI": (13.3000, 80.2000),
+        "LUCKNOW": (26.8800, 80.9000),
+        "HYDERABAD": (17.6000, 78.5000),
+        "AHEMEDABAD": (23.1000, 72.6000)
+    }
 }
 
 # =========================
 # 3️⃣ Distance function
 # =========================
 def geo_distance(lat1, lon1, lat2, lon2):
-    R = 6371  # Earth radius (km)
-
+    R = 6371
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
-
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
     return R * c
 
 # =========================
-# 4️⃣ Compute minimum distance to each feature type
+# 4️⃣ Compute distances
 # =========================
 rows = []
 
 for station, (slat, slon) in stations.items():
     row = {"station": station}
 
-    for feature_name, coords_list in features.items():
-        distances = [
-            geo_distance(slat, slon, flat, flon)
-            for flat, flon in coords_list
-        ]
-        row[f"distance_to_{feature_name}_km"] = min(distances)
+    for feature_name, station_map in features.items():
+        flat, flon = station_map[station]   # ✅ use full station name
+        row[f"distance_to_{feature_name}_km"] = geo_distance(slat, slon, flat, flon)
 
     rows.append(row)
 
 df = pd.DataFrame(rows)
-
-# =========================
-# 5️⃣ Save dataset
-# =========================
-output_file = "location_features.csv"
-df.to_csv(output_file, index=False)
+df.to_csv("location_features.csv", index=False)
 
 print("\n✅ Location features created successfully")
-print("Saved to:", output_file)
-print("\nPreview:")
 print(df)
