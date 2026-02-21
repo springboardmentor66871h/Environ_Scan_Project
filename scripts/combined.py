@@ -4,7 +4,7 @@ print("📦 Loading datasets...")
 
 weather = pd.read_csv("data/raw/weather_data.csv")
 pollution = pd.read_csv("data/raw/pollution_data.csv")
-location = pd.read_csv("data/raw/location_features_data.csv")
+location = pd.read_csv("data/raw/location_features.csv")
 
 # ---------- clean column names ----------
 def clean(df):
