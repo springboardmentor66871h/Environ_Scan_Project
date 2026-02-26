@@ -56,14 +56,28 @@ for col in numeric_cols:
         else:
             df_master[f'{col}_norm'] = 0.0
 
+print("7. Final Polish...")
+# Round all numeric columns to 2 decimals for clean reading
+df_master = df_master.round(2)
+
+# This completely stops Excel from hiding the time or messing up the format!
+df_master['timestamp'] = df_master['timestamp'].astype(str)
 print(" 7. Final Polish...")
 # Round all numeric columns to 2 decimals for clean reading
 df_master = df_master.round(2)
 
-# Save the final Master Dataset
+# Save the final Master Dataset in BOTH formats
 os.makedirs("data", exist_ok=True)
-output_path = "data/Combined_Dataset.csv"
-df_master.to_csv(output_path, index=False)
 
-print(f"\n Combined dataset generated at: {output_path}")
+csv_output_path = "data/Combined_Dataset.csv"
+excel_output_path = "data/Combined_Dataset.xlsx"
+
+print("Saving as CSV (Optimized for Machine Learning speed)...")
+df_master.to_csv(csv_output_path, index=False)
+
+print("Saving as Excel (Optimized for human viewing and sharing)...")
+df_master.to_excel(excel_output_path, index=False)
+
+# This new print statement uses the correct variable names!
+print(f"\nCombined dataset generated at both:\n 1. {csv_output_path}\n 2. {excel_output_path}")
 print(f"Final Dataset Shape: {df_master.shape[0]} hourly rows, {df_master.shape[1]} columns")
