@@ -79,3 +79,39 @@ The expanded heuristic script successfully categorized ~80% of the dataset into 
 * **Agricultural:** 47,688 (2.4%)
 * **Natural:** 11,555 (0.6%)
 * **Mixed/Unknown:** 421,536 (21.6%) *(Retained to represent baseline/mixed background air).*
+
+## 🤖 Milestone 2: Model Training & Source Prediction (Week 4)
+
+### 1. Model Selection & Hyperparameter Tuning
+We evaluated two tree-based classification models to predict the `pollution_source` target variable:
+* **Baseline Decision Tree:** Achieved an initial accuracy of 99.66%.
+* **Random Forest Classifier (Selected):** Chosen for its robustness against overfitting on complex datasets.
+
+We utilized `RandomizedSearchCV` with 3-fold cross-validation to tune the Random Forest. 
+**Best Hyperparameters Found:**
+* `n_estimators`: 100
+* `max_depth`: 20
+* `min_samples_split`: 2
+
+### 2. Features Utilized
+The model was trained on 11 input features:
+* **Pollutants:** PM2.5, PM10, NO2, SO2
+* **Meteorological:** Temperature, Humidity, Wind Speed
+* **Geospatial (Simulated):** distance_to_road, distance_to_industry, distance_to_dump, distance_to_farmland
+
+### 3. Model Evaluation & Metrics
+The model was evaluated on a 20% holdout test set (40,000 rows) using a stratified split to ensure class balance. 
+* **Final Accuracy:** 99.74%
+* **Precision / Recall / F1-Score:** The model scored heavily between 0.98 and 1.00 across almost all categories (Vehicular, Industrial, Burning, Agricultural, Mixed/Unknown). The lowest recall was for 'Natural' (0.88), indicating slight confusion with Mixed background air.
+
+*(Note: See the `models/` directory for the exported `random_forest_enviroscan.joblib` file, Confusion Matrix, and Feature Importance charts).*
+
+### 4. Interpretation, Observations & Limitations
+While a 99.74% accuracy appears mathematically exceptional, proper data science interpretation requires acknowledging **Target Leakage via Rule-Based Heuristics**. 
+
+Because the ground-truth labels were simulated in Week 3 using strict IF/ELSE thresholds based directly on the input features (e.g., NO2 and distance_to_road), the Random Forest effectively reverse-engineered our labeling logic rather than discovering organic environmental correlations. 
+
+**Key Limitations:**
+* **Over-reliance on heuristics:** The feature importance chart confirms the model heavily prioritized the exact variables used in Week 3's script. 
+* **Real-world accuracy will vary:** When exposed to real, noisy sensor data lacking perfect proximity alignments, this model's accuracy will predictably drop. 
+* **Next Steps:** To improve real-world viability, future iterations should introduce Gaussian noise to the simulated labels or replace the synthetic geospatial metrics with real OpenStreetMap API distances for specific target deployment cities.
