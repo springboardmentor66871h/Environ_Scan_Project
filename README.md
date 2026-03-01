@@ -137,7 +137,69 @@ Milestone 3 (Week 4):
 - Performance Evaluation
 - Feature Importance Analysis
 
+# 🤖 Milestone  3– Week 4  
+## Model Training & Source Prediction
 
+### Objective
+To train and evaluate machine learning models capable of predicting the `pollution_source` variable.
+
+
+### Models Trained
+- Decision Tree
+- Random Forest
+- XGBoost
+
+Hyperparameter tuning was performed using GridSearchCV with 5-fold cross-validation.
+
+
+
+### Train-Test Split
+- 80% Training Data
+- 20% Testing Data
+- random_state = 42
+- Stratified sampling used
+
+
+
+### Best Model Selected
+XGBoost
+
+Selected based on highest cross-validation weighted F1-score.
+
+### Model Performance (Test Set)
+
+- Accuracy: 99.02%
+- Weighted F1-score: 0.99
+
+All classes achieved strong precision and recall.
+
+
+### Interpretation
+
+The high performance is expected because the dataset was labeled using deterministic rule-based heuristics. Tree-based models such as XGBoost are highly effective at learning threshold-based decision boundaries.
+
+No significant overfitting was observed as training and testing performance were similar.
+
+
+
+### Feature Importance
+
+Most influential features:
+- SO₂
+- PM2.5
+- Distance to Industry
+- Distance to Dump
+- NO₂
+- Distance to Road
+
+This aligns with environmental logic used during rule-based labeling.
+
+### Model Export
+
+The trained model is saved as:
+models/best_model.joblib
+
+This model will be integrated into the dashboard in the next milestone.
 
 👩‍💻 Author
 Rushda – CSE (Data Science)
