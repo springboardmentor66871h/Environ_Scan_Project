@@ -1,32 +1,73 @@
-# EnviroScan: Milestone 1 - Data Collection
+EnviroScan: AI-Powered Pollution Source Identification using Geospatial Analytics
+Project Overview
+EnviroScan is an AI-driven initiative designed to identify and predict the primary sources of air pollution (e.g., Vehicular, Industrial, Agricultural) in specific geographic locations. By combining live atmospheric pollutant data, weather conditions, and geospatial proximity features, this project aims to provide actionable environmental intelligence.
 
-## Overview
-This repository contains the dataset preparation for Week 1 of the EnviroScan project: AI-Powered Pollution Source Identification. The objective of this phase is strictly data collection, preprocessing, and dataset organization. No machine learning models, dashboards, or Docker setups are included at this stage.
+📂 Repository Structure
+Plaintext
+EnviroScan/
+│
+├── data/
+│   ├── raw/                            # Raw data fetched from APIs
+│   └── processed/
+│       └── final_combined_dataset.csv  # Merged dataset used for modeling
+│
+├── models/                             # Exported model artifacts (Week 4)
+│   ├── best_pollution_model.joblib     # Trained LightGBM model
+│   ├── label_encoder.joblib            # Target variable encoder
+│   └── feature_scaler.joblib           # StandardScaler for numerical features
+│
+├── notebooks/
+│   └── Week4_Model_Training.ipynb      # Colab notebook containing model training and evaluation
+│
+├── visuals/                            # Evaluation charts
+│   ├── confusion_matrix.png            
+│   └── feature_importance.png          
+│
+└── README.md                           # Project documentation
+📅 Project Progression
+Milestone 1 (Weeks 1 & 2): Data Collection & Preparation
+Pollution Data: Sourced PM2.5, PM10, NO₂, CO, SO₂, and O₃ levels using the OpenAQ API.
 
-## Data Sources & APIs 
-The datasets were built using the sources specified in the project requirements:
-1. **OpenAQ:** Used to collect air pollution metrics (PM2.5, PM10, NO₂, CO, SO₂, O₃).
-2. **OpenWeatherMap:** Used to collect meteorological data (Temperature, Humidity, Wind speed, Wind direction).
-3. **OpenStreetMap:** Used to identify nearby physical features (proximity to roads, industrial zones, dump sites, agricultural fields).
+Weather Data: Sourced Temperature, Humidity, Wind Speed, and Wind Direction using the OpenWeatherMap API.
 
-## Cities Selected & Time Range
-* **Selected Locations:** [Insert City 1], [Insert City 2], [Insert City 3]
-* **Time Range of Data:** [Insert the dates your data covers, e.g., February 15 - February 18, 2026]
+Geospatial Features: Extracted distance metrics (Distance to Road, Industry, Dump Site, Farmland) using OpenStreetMap / OSMnx.
 
-## How the Data Was Collected
-1. **Pollution Data:** CSV data was extracted directly from the OpenAQ Explorer for the selected monitoring stations, capturing the required pollutant levels and timestamps.
-2. **Weather Data:** Historical weather data (temperature, humidity, wind speed/direction) was gathered for the exact coordinates and timestamps matching the pollution records to ensure temporal alignment.
-3. **Location Features:** Spatial analysis was conducted using map data to determine the presence of roads, industrial zones, landfills, and farmland within the immediate vicinity of the coordinate points.
-4. **Dataset Merging:** The individual raw datasets were merged into a single structured dataset (`combined_dataset.csv`) aligned by City, Latitude, Longitude, and Timestamp.
+Result: Merged into a unified dataset containing atmospheric, meteorological, and spatial variables.
 
-## Folder Structure
-The repository is organized exactly as requested:
-* `data/raw/` 
-  * `pollution_data.csv` (Contains raw OpenAQ exports)
-  * `weather_data.csv` (Contains aligned meteorological data)
-  * `location_features.csv` (Contains geospatial booleans)
-* `data/processed/`
-  * `combined_dataset.csv` (The final merged dataset ready for future modeling)
+Milestone 2 (Week 3): Source Labeling & Simulation
+Due to the absence of real-world ground-truth labels for pollution sources, we engineered the target variable (pollution_source) using logical, rule-based heuristics.
 
-## Missing Values Handling
-During the data collection process, any missing API readings for specific pollutants or weather metrics at a given timestamp were left blank (NaN). These missing values have been preserved in the raw and processed datasets and will be explicitly handled (e.g., via imputation or dropping) during the data preprocessing phase in Milestone 2.
+Categories Simulated: Vehicular, Industrial, Agricultural, Burning, Natural.
+
+Logic Example: NO2 > Threshold + Distance to Road < 1.0km = Vehicular.
+
+Limitation: These labels represent logical environmental assumptions rather than sensor-verified truth.
+
+Milestone 2 (Week 4): Model Training & Source Prediction
+This phase focused on training a machine learning classification model to automatically predict the pollution_source variable based on our engineered dataset.
+
+1. Model Selection:
+We evaluated 12 different classification algorithms (including Random Forest, XGBoost, Support Vector Machines, and Neural Networks) using 5-fold cross-validation.
+
+Selected Model: LightGBM was chosen as it achieved the highest cross-validation score and handled the complex feature interactions flawlessly.
+
+2. Data Preprocessing:
+
+Categorical targets were mapped using LabelEncoder.
+
+All numerical input features were normalized using StandardScaler prior to training to ensure uniform feature weighting.
+
+3. Performance Metrics (Evaluated on 20% Unseen Test Data):
+
+Accuracy: 0.9970 (99.70%)
+
+Precision: 0.9970
+
+Recall: 0.9970
+
+F1-Score: 0.9970
+
+4. Observations and Project Limitations:
+The LightGBM model achieved near-perfect accuracy. While this demonstrates highly successful algorithmic training and hyperparameter tuning, it is critical to acknowledge the primary limitation of this phase: because our training labels were generated deterministically in Week 3 using strict IF/ELSE rules, the model has essentially learned to reverse-engineer those exact static thresholds.
+
+In a real-world deployment scenario, this model would need to be retrained on authenticated, ground-truth data to accurately capture true atmospheric dispersion complexities and avoid propagating rule-based biases.
