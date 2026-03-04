@@ -1,0 +1,1 @@
+location_id,name,locality,latitude_x,longitude_x,timezone,pollutants_available,isMobile,isMonitor,datetime,city,latitude_y,longitude_y,temperature,humidity,wind_speed,wind_direction,hour,day,month,weekday,Distance_to_Nearest_Road
