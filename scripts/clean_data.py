@@ -1,32 +1,25 @@
 import pandas as pd
+import os
+
+# Ensure processed folder exists
+os.makedirs("data/processed", exist_ok=True)
 
 # Load dataset
-df = pd.read_csv("data/station_day.csv")
+df = pd.read_csv("data/raw/pollution_data.csv")
 
-# Select required columns
-required_columns = [
-    "StationId",
-    "Date",
-    "PM2.5",
-    "PM10",
-    "NO2",
-    "CO",
-    "SO2",
-    "O3"
-]
+print("Original Shape:", df.shape)
+print("Columns:", df.columns)
 
-df = df[required_columns]
+# Fill missing values
+df = df.ffill()
 
-# Remove rows with missing values
-df = df.dropna()
-
-# Keep only first 10000 rows
+# Keep first 10000 rows
 df = df.head(10000)
 
-print("Final Shape:", df.shape)
+print("Cleaned Shape:", df.shape)
 print(df.head())
 
 # Save cleaned dataset
-df.to_csv("data/india_pollution_cleaned_10000.csv", index=False)
+df.to_csv("data/processed/cleaned_data.csv", index=False)
 
-print("Saved successfully!")
+print("Cleaned dataset saved successfully!")
