@@ -274,34 +274,64 @@ Open waste burning produces high particulate matter concentrations.
 5️⃣ Natural
 
 Condition:
+
 Assigned when none of the above conditions are met.
+
 Logic:
+
 Represents background pollution, dust, or mixed atmospheric sources not strongly linked to anthropogenic activities.
+
 Visualization file generated:
+
 Source_Labeling/label_distribution.png
+
 📁 Output Files
+
 ✅ Final Labeled Dataset
+
 data/processed/final_labeled_dataset.csv
+
 ✅ Visualization
+
 Source_Labeling/label_distribution.png
+
 Run labeling script:
+
 python Source_Labeling/labeling_rules.py
+
 Outputs:
+
 Labeled CSV
+
 Distribution visualization.
 
+
 🌍 EnviroScan – Pollution Source Classification (Week 4)
-This model predicts the likely pollution source based on pollutant concentration levels and distance to nearby potential pollution contributors such as roads, industries, farms, and dump sites.
+
+This model predicts the likely pollution source based on pollutant concentration levels and distance to nearby potential pollution contributors such as roads, 
+industries, farms, and dump sites.
+
 This repository contains the Week 4 milestone deliverables, including:
+
 Target label generation (rule-based)
+
 Model training (Random Forest)
+
+
 Model evaluation
+
 Feature importance analysis
+
 Exported trained model
+
 📊 Dataset Information
+
 Total Records: 3314
+
 Features Used: 7
+
 Train-Test Split: 80% / 20%
+
 🔹 Input Features
 Pollutant Features
 pollutant_min
@@ -314,12 +344,14 @@ Nearest_Dump_km
 Nearest_Farm_km
 
 🎯 Target Variable Creation
+
 The target column pollution_source is generated using rule-based logic:
 If distance to industry < 2 km → Industrial
 If distance to farm < 2 km → Agricultural
 If distance to dump < 2 km → Dump
 If distance to road < 2 km → Vehicular
 Otherwise → Natural
+
 This labeling approach is deterministic and based on proximity thresholds.
 ⚙️ Model Details
 Model Used
@@ -329,10 +361,12 @@ n_estimators = 300
 class_weight = 'balanced'
 random_state = 42
 Stratified train-test split
+
 📉 Confusion Matrix
 Saved at:
 models/confusion_matrix.png
 The confusion matrix shows zero misclassifications on the test set.
+
 🔍 Feature Importance
 Top contributing features:
 Nearest_Industry_km
@@ -340,13 +374,20 @@ Nearest_Road_km
 Nearest_Farm_km
 Pollutant statistics
 Saved at:
+
 models/feature_importance.png
 📦 Exported Model
+
 The trained model and label encoder are saved using joblib:
+
 models/pollution_model.pkl
+
 models/label_encoder.pkl
+
 These files can be integrated into a dashboard or deployment pipeline.
+
 📂 Project Structure
+
 EnviroScan/
 │
 ├── data/
@@ -363,3 +404,105 @@ EnviroScan/
 │   └── train_model.py
 │
 └── README.md
+
+🌍EnviroScan – Module 5: Geospatial Pollution Mapping
+📌Overview
+
+Module 5 of the EnviroScan project focuses on Geospatial Data Visualization. This module generates an interactive pollution heatmap using geographic coordinates from environmental datasets. The visualization helps identify pollution hotspots and understand the spatial distribution of pollution levels.
+
+The system processes pollution data and displays it on an interactive map using geospatial visualization techniques.
+
+🎯Objectives
+
+Visualize pollution intensity geographically
+
+Identify high pollution zones
+
+Represent pollution data using heatmaps
+
+Provide an interactive map for environmental analysis
+
+🛠Technologies Used
+
+Python
+
+Pandas – Data processing
+
+Folium – Geospatial visualization
+
+Leaflet.js – Interactive map rendering
+
+📂Project Structure
+EnviroScan
+│
+├── data
+│   └── processed
+│       └── final_map_dataset.csv
+│
+├── visualization
+│   ├── geospatial_map.py
+│   └── pollution_map.html
+│
+└── README.md
+🗂Dataset Description
+
+The dataset contains processed pollution information including:
+
+Latitude – Geographic coordinate
+
+Longitude – Geographic coordinate
+
+pollutant_avg – Average pollution level (PM2.5)
+
+pollution_source – Source category (Industrial, Vehicular, Agricultural, Burning)
+
+These fields are used to create the geospatial visualization.
+
+⚙Installation
+
+Install required Python libraries:
+
+pip install pandas folium
+▶Running the Module
+
+Run the geospatial visualization script:
+
+python visualization/geospatial_map.py
+
+This will generate the output file:
+
+visualization/pollution_map.html
+
+Open the HTML file in a web browser to view the interactive pollution map.
+
+✨Features
+
+Pollution heatmap visualization
+
+Color gradient representing pollution intensity
+
+Interactive geographic map
+
+Pollution value markers
+
+Legend explaining pollution levels
+
+Zoom and navigation support
+
+📊Output
+
+The generated map displays pollution intensity using a color gradient:
+
+Blue – Very Low Pollution
+
+Green – Moderate Pollution
+
+Yellow – High Pollution
+
+Red – Severe Pollution
+
+Users can zoom and interact with the map to explore pollution levels in different regions.
+
+✅Conclusion
+
+Module 5 successfully visualizes environmental pollution data using geospatial mapping techniques. This interactive visualization helps in identifying pollution hotspots and supports environmental monitoring and analysis.
