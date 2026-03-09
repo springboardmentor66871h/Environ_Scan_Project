@@ -143,4 +143,28 @@ The dataset contains the following classes:
 
 
 ## Generated Outputs
+ HEAD
  fdfb9cb2 (Week 3 milestone: pollution labeling and dataset generation)
+
+
+## Week 4 – Model Training
+
+Model Used:
+Random Forest Classifier
+
+Features:
+PM2.5, PM10, NO2, CO, SO2, O3
+Temperature, Humidity
+Wind Speed, Wind Direction
+Distance to Road, Industry, Dump Site
+
+Evaluation Metrics:
+Accuracy
+Precision
+Recall
+F1-score
+
+Output Files:
+models/pollution_model.pkl
+feature_importance.png
+ fc668669 (Week 4: Model training and evaluation)
