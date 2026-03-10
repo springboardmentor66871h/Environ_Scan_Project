@@ -4,99 +4,107 @@ import os
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
+from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-print("🚀 Starting EnviroScan Model Training Pipeline...")
-INPUT_FILE_1 = "data/processed/labeled_india_part1.zip"
-INPUT_FILE_2 = "data/processed/labeled_india_part2.zip"
-MODEL_DIR = "models"
-os.makedirs(MODEL_DIR, exist_ok=True)
+print("--- Step 1: Loading Dataset ---")
+df = pd.read_csv("data/processed/labeled_environment_dataset.csv")
 
-print("⏳ Loading labeled datasets...")
-df1 = pd.read_csv(INPUT_FILE_1)
-df2 = pd.read_csv(INPUT_FILE_2)
-df = pd.concat([df1, df2], ignore_index=True)
+# We need to convert the text-based 'pollutant' column (e.g., 'pm25') into numbers for the AI
+le_pollutant = LabelEncoder()
+df['pollutant_encoded'] = le_pollutant.fit_transform(df['pollutant'])
 
-print(f"📊 Original dataset size: {len(df)} rows. Sampling 200,000 rows for efficient training...")
-df, _ = train_test_split(df, train_size=200000, random_state=42, stratify=df['pollution_source'])
+# We also need to convert our target labels (Vehicular, Industrial, etc.) into numbers
+le_target = LabelEncoder()
+df['target_encoded'] = le_target.fit_transform(df['pollution_source'])
 
+print("--- Step 2: Defining Features (X) and Target (y) ---")
+# These are the exact features requested by the mentor
 features = [
-    'pm25', 'pm10', 'no2', 'so2', 'temperature', 'humidity', 'wind_speed', 
-    'distance_to_road', 'distance_to_industry', 'distance_to_dump', 'distance_to_farmland'
+    'pollutant_encoded', 'value', # The specific pollutant and its concentration level
+    'temperature', 'humidity', 'wind_speed', 'wind_direction', # Weather
+    'distance_to_road_m', 'distance_to_industry_m', 'distance_to_dump_m', 'distance_to_farmland_m' # Proximity
 ]
 
-df[features] = df[features].fillna(df[features].median())
-
 X = df[features]
-y = df['pollution_source']
+y = df['target_encoded']
 
-print("✂️ Splitting data (80% Train, 20% Test)...")
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+print("--- Step 3: Train-Test Split ---")
+# 80% Training data, 20% Testing data with a fixed random_state for reproducibility
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+print(f"Training on {len(X_train)} rows, Testing on {len(X_test)} rows.")
 
-print("🌲 Training baseline Decision Tree...")
-dt_model = DecisionTreeClassifier(random_state=42)
-dt_model.fit(X_train, y_train)
-dt_pred = dt_model.predict(X_test)
-print(f"   Baseline Decision Tree Accuracy: {accuracy_score(y_test, dt_pred):.4f}")
+print("\n--- Step 4 & 5: Training & Tuning Models ---")
+print("Training Model 1: XGBoost (Baseline)...")
+xgb_model = XGBClassifier(random_state=42, eval_metric='mlogloss')
+xgb_model.fit(X_train, y_train)
+xgb_pred = xgb_model.predict(X_test)
+xgb_acc = accuracy_score(y_test, xgb_pred)
+print(f"XGBoost Baseline Accuracy: {xgb_acc * 100:.2f}%")
 
-print("🌳 Tuning Random Forest Classifier (This may take 2-3 minutes)...")
-rf_base = RandomForestClassifier(random_state=42, n_jobs=-1)
-
-param_dist = {
+print("\nTraining Model 2: Random Forest (with GridSearchCV)...")
+# We use GridSearchCV to find the absolute best settings (hyperparameters) for the Random Forest
+param_grid = {
     'n_estimators': [50, 100],
-    'max_depth': [10, 20, None],
-    'min_samples_split': [2, 5]
+    'max_depth': [10, 20, None]
 }
+rf = RandomForestClassifier(random_state=42)
+grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3, n_jobs=-1)
+grid_search.fit(X_train, y_train)
 
-rf_random = RandomizedSearchCV(
-    estimator=rf_base, param_distributions=param_dist, 
-    n_iter=5, cv=3, verbose=1, random_state=42, n_jobs=-1
-)
+best_rf = grid_search.best_estimator_
+rf_pred = best_rf.predict(X_test)
+rf_acc = accuracy_score(y_test, rf_pred)
 
-rf_random.fit(X_train, y_train)
-best_rf = rf_random.best_estimator_
-print(f"✅ Best Parameters Found: {rf_random.best_params_}")
+print(f"Random Forest Best Parameters: {grid_search.best_params_}")
+print(f"Random Forest Tuned Accuracy: {rf_acc * 100:.2f}%")
 
-print("\n🧪 Evaluating Best Model on Test Data...")
-y_pred = best_rf.predict(X_test)
+# Select the best model (Usually Random Forest wins on this type of rule-based data)
+final_model = best_rf if rf_acc >= xgb_acc else xgb_model
+print(f"\nSelected Best Model: {type(final_model).__name__}")
 
-accuracy = accuracy_score(y_test, y_pred)
-print(f"\n🏆 Final Model Accuracy: {accuracy * 100:.2f}%\n")
+print("\n--- Step 6: Model Evaluation ---")
+y_pred = final_model.predict(X_test)
 
-print("📄 Classification Report (Precision, Recall, F1-Score):")
-report = classification_report(y_test, y_pred)
-print(report)
+# Mentor requested Accuracy, Precision, Recall, and F1-Score (classification_report does all of this!)
+target_names = le_target.classes_
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=target_names))
 
-plt.figure(figsize=(10, 7))
-cm = confusion_matrix(y_test, y_pred, labels=best_rf.classes_)
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=best_rf.classes_, yticklabels=best_rf.classes_)
+# Create Confusion Matrix Plot
+plt.figure(figsize=(8, 6))
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=target_names, yticklabels=target_names)
 plt.title('Confusion Matrix - Pollution Source Prediction')
 plt.ylabel('Actual Source')
 plt.xlabel('Predicted Source')
 plt.tight_layout()
-cm_path = os.path.join(MODEL_DIR, 'confusion_matrix.png')
-plt.savefig(cm_path)
-print(f"✅ Confusion Matrix saved to: {cm_path}")
+os.makedirs("data/processed", exist_ok=True)
+plt.savefig("data/processed/confusion_matrix.png")
+print("Saved Confusion Matrix to data/processed/confusion_matrix.png")
 
-print("\n🔍 Analyzing Feature Importance...")
-importances = best_rf.feature_importances_
-feature_names = X.columns
-feat_imp_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances}).sort_values(by='Importance', ascending=True)
+print("\n--- Step 7: Feature Importance Analysis ---")
+# Extract feature importance to see what the AI thinks is most important
+importances = final_model.feature_importances_
+indices = np.argsort(importances)[::-1]
 
 plt.figure(figsize=(10, 6))
-plt.barh(feat_imp_df['Feature'], feat_imp_df['Importance'], color='teal')
-plt.title('Feature Importance for Pollution Source Prediction')
-plt.xlabel('Importance Score')
+plt.title("Feature Importances")
+plt.bar(range(X.shape[1]), importances[indices], align="center", color='teal')
+plt.xticks(range(X.shape[1]), [features[i] for i in indices], rotation=45, ha='right')
 plt.tight_layout()
-fi_path = os.path.join(MODEL_DIR, 'feature_importance.png')
-plt.savefig(fi_path)
-print(f"✅ Feature Importance chart saved to: {fi_path}")
+plt.savefig("data/processed/feature_importance.png")
+print("Saved Feature Importance Chart to data/processed/feature_importance.png")
 
-print("\n💾 Exporting the trained model...")
-model_path = os.path.join(MODEL_DIR, 'random_forest_enviroscan.joblib')
-joblib.dump(best_rf, model_path)
-print(f"✅ SUCCESS! Model saved to: {model_path}")
-print("🎉 Week 4 Coding Complete!")
+print("\n--- Step 8: Export the Final Model ---")
+os.makedirs("models", exist_ok=True)
+# We must save the model AND the encoders so the dashboard knows how to read the text later!
+joblib.dump(final_model, "models/pollution_source_model.pkl")
+joblib.dump(le_pollutant, "models/pollutant_encoder.pkl")
+joblib.dump(le_target, "models/target_encoder.pkl")
+
+print("SUCCESS: Model and Encoders saved to the 'models/' folder.") 
+print("Week 4 (Model Training) is 100% COMPLETE!")
