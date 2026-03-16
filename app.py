@@ -70,7 +70,12 @@ features_for_prediction = pd.DataFrame([{
 prediction_encoded = model.predict(features_for_prediction)[0]
 predicted_source = le_target.inverse_transform([prediction_encoded])[0]
 
-col4.metric("Predicted Source", predicted_source)
+# --- NEW: Calculate the Confidence Score! ---
+probabilities = model.predict_proba(features_for_prediction)[0]
+confidence_score = max(probabilities) * 100
+
+# Update the metric card to show both the source AND the confidence percentage
+col4.metric("Predicted Source", f"{predicted_source} ({confidence_score:.1f}%)")
 
 st.markdown("---")
 

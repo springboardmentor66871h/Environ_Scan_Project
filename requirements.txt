@@ -1,0 +1,10 @@
+pandas
+numpy
+scikit-learn
+xgboost
+folium
+streamlit
+plotly
+osmnx
+geopandas
+shapely
