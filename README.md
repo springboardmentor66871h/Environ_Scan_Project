@@ -93,6 +93,22 @@ While the `99.7%` evaluation metrics demonstrate successful algorithmic training
 2. Integrate the exported `.joblib` model into a live, interactive web dashboard (Streamlit/Flask) for real-time inference.
 3. Containerize the application using Docker for seamless deployment.
 
+### Milestone 3 (Modules 5 & 6): Geospatial Mapping & Real-Time Dashboard
+
+**Overview:**
+The final phase of the EnviroScan project integrates the trained predictive models into a centralized, interactive web application built with Streamlit. This dashboard serves as a decision-support platform, transforming raw predictions into actionable geospatial and temporal insights.
+
+**Geospatial Visualization (Folium):**
+* **Heatmap Integration:** Utilized `folium.plugins.HeatMap` to visualize PM2.5 intensity gradients across the selected geographic areas.
+* **Source-Specific Markers:** Implemented dynamically colored `CircleMarkers` to plot the predicted origin of pollution (e.g., Industrial, Vehicular) at precise coordinates.
+* **High-Risk Zones:** Applied threshold logic (`PM2.5 > 50 µg/m³`) to automatically scale marker radius and trigger high-visibility colors for critical zones, allowing rapid identification by stakeholders.
+* **Embedding:** Seamlessly embedded the interactive HTML map directly into the Streamlit UI via the `streamlit-folium` bridge.
+
+**Dashboard Features (Streamlit):**
+* **Real-Time Alert System:** Conditional UI banners (`st.error`, `st.warning`) trigger automatically when aggregated pollutant levels cross predefined safety thresholds (e.g., PM2.5 > 50 or NO2 > 40).
+* **Trend & Distribution Analytics:** Integrated interactive `plotly` charts, including time-series line charts for pollutant tracking and pie charts for source distribution analysis.
+* **Interactive Filtering:** Sidebar widgets allow users to slice data by city, date ranges, and specific predicted sources.
+* **Reporting:** Built-in export functionality allows users to download the filtered, current-view dataset as a CSV report for offline analysis.
 ---
 
 ## 📂 Repository Structure
