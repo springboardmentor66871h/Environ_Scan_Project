@@ -1,156 +1,185 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
 import folium
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
-from sklearn.ensemble import RandomForestClassifier
-import pickle
-import os
 
-st.set_page_config(page_title="Pollution Monitoring Dashboard", layout="wide")
+st.set_page_config(page_title="EnviroScan Dashboard", layout="wide")
 
-st.title("🌍 Pollution Monitoring & Source Prediction Dashboard")
+st.title("🌍 EnviroScan – Air Pollution Intelligence Dashboard")
 
-# -----------------------------
-# Generate Sample Dataset
-# -----------------------------
-cities = [
-    ("Delhi",28.61,77.20),
-    ("Mumbai",19.07,72.87),
-    ("Bangalore",12.97,77.59),
-    ("Chennai",13.08,80.27),
-    ("Kolkata",22.57,88.36),
-    ("Hyderabad",17.38,78.48),
-    ("Pune",18.52,73.85),
-    ("Ahmedabad",23.02,72.57)
-]
+# -------------------------
+# LOAD DATA
+# -------------------------
+@st.cache_data
+def load_data():
+    df = pd.read_csv("../data/processed/final_labeled_dataset.csv")
+    return df
 
-data = []
+df = load_data()
 
-for city,lat,lon in cities:
-    for i in range(50):
-        data.append({
-            "city":city,
-            "lat":lat + np.random.normal(0,0.05),
-            "lon":lon + np.random.normal(0,0.05),
-            "pm25":np.random.randint(40,250),
-            "pm10":np.random.randint(50,300),
-            "no2":np.random.randint(10,120),
-            "source":np.random.choice(["Traffic","Industry","Construction","Natural"])
-        })
+# Remove rows with missing coordinates
+df = df.dropna(subset=["Latitude", "Longitude"])
 
-df = pd.DataFrame(data)
+# -------------------------
+# SIDEBAR FILTERS
+# -------------------------
+st.sidebar.header("Filters")
 
-# -----------------------------
-# Metrics Section
-# -----------------------------
-st.subheader("📊 Current Pollution Metrics")
+# STATE FILTER
+if "state" in df.columns:
+    states = ["All"] + sorted(df["state"].dropna().unique())
+    selected_state = st.sidebar.selectbox("Select State", states)
+else:
+    selected_state = "All"
 
-col1,col2,col3 = st.columns(3)
+# CITY FILTER
+if "city" in df.columns:
+    if selected_state != "All":
+        cities = ["All"] + sorted(df[df["state"] == selected_state]["city"].dropna().unique())
+    else:
+        cities = ["All"] + sorted(df["city"].dropna().unique())
+    selected_city = st.sidebar.selectbox("Select City", cities)
+else:
+    selected_city = "All"
 
-col1.metric("Average PM2.5", round(df["pm25"].mean(),2))
-col2.metric("Average PM10", round(df["pm10"].mean(),2))
-col3.metric("Average NO2", round(df["no2"].mean(),2))
+# POLLUTION SOURCE FILTER
+sources = sorted(df["pollution_source"].dropna().unique())
+selected_sources = st.sidebar.multiselect("Pollution Source", sources, default=sources)
 
-# -----------------------------
-# Pollution Trend Chart
-# -----------------------------
-st.subheader("📈 Pollution Trend Analysis")
-
-trend_df = df.groupby("city")[["pm25","pm10","no2"]].mean().reset_index()
-
-fig = px.bar(
-    trend_df,
-    x="city",
-    y=["pm25","pm10","no2"],
-    barmode="group",
-    title="Average Pollution by City"
+# SEARCH FILTER
+search_location = st.sidebar.text_input(
+    "Search Area / City / State",
+    placeholder="Type Chennai, Delhi, Mumbai..."
 )
 
-st.plotly_chart(fig, width="stretch")
+# -------------------------
+# APPLY FILTERS
+# -------------------------
+filtered_df = df.copy()
 
-# -----------------------------
-# Pollution Source Distribution
-# -----------------------------
-st.subheader("🏭 Pollution Source Distribution")
+# Source filter
+filtered_df = filtered_df[filtered_df["pollution_source"].isin(selected_sources)]
 
-source_counts = df["source"].value_counts().reset_index()
-source_counts.columns = ["source","count"]
+# State filter
+if selected_state != "All" and "state" in filtered_df.columns:
+    filtered_df = filtered_df[filtered_df["state"] == selected_state]
 
-fig2 = px.pie(
-    source_counts,
-    names="source",
-    values="count",
-    title="Pollution Sources"
-)
+# City filter
+if selected_city != "All" and "city" in filtered_df.columns:
+    filtered_df = filtered_df[filtered_df["city"] == selected_city]
 
-st.plotly_chart(fig2, width="stretch")
+# Search filter
+if search_location:
+    search_location = search_location.lower()
 
-# -----------------------------
-# Interactive Pollution Map
-# -----------------------------
-st.subheader("🗺️ Pollution Heatmap")
+    if "city" in filtered_df.columns:
+        filtered_df = filtered_df[
+            filtered_df["city"].str.lower().str.contains(search_location, na=False)
+        ]
 
-m = folium.Map(location=[22.5,78.9], zoom_start=5)
+    if "state" in filtered_df.columns:
+        filtered_df = filtered_df[
+            filtered_df["state"].str.lower().str.contains(search_location, na=False)
+        ]
 
-heat_data = df[["lat","lon","pm25"]].values.tolist()
+# -------------------------
+# CHECK DATA
+# -------------------------
+if filtered_df.empty:
+    st.warning("No pollution data available for this location.")
+    st.stop()
 
+# -------------------------
+# METRICS
+# -------------------------
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Total Records", len(filtered_df))
+col2.metric("Average PM2.5", round(filtered_df["PM2.5"].mean(), 2))
+col3.metric("Pollution Sources", filtered_df["pollution_source"].nunique())
+
+st.divider()
+
+# -------------------------
+# MAP
+# -------------------------
+st.subheader("🗺 Pollution Map")
+
+center_lat = filtered_df["Latitude"].mean()
+center_lon = filtered_df["Longitude"].mean()
+
+m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
+
+# Heatmap
+heat_data = filtered_df[["Latitude", "Longitude", "PM2.5"]].dropna().values.tolist()
 HeatMap(heat_data).add_to(m)
 
-st_folium(m, width=900, height=500)
+# Source markers
+color_map = {
+    "Vehicular": "blue",
+    "Industrial": "red",
+    "Agricultural": "green",
+    "Burning": "orange",
+    "Natural": "purple"
+}
 
-# -----------------------------
-# Pollution Alerts
-# -----------------------------
-st.subheader("🚨 Pollution Alerts")
+for _, row in filtered_df.iterrows():
 
-danger = df[df["pm25"] > 200]
+    color = color_map.get(row["pollution_source"], "gray")
 
-if len(danger) > 0:
-    st.error(f"⚠️ {len(danger)} locations detected with dangerous PM2.5 levels")
-else:
-    st.success("Air quality within safe range")
+    folium.CircleMarker(
+        location=[row["Latitude"], row["Longitude"]],
+        radius=6,
+        color=color,
+        fill=True,
+        fill_opacity=0.7,
+        popup=f"""
+        Source: {row['pollution_source']}<br>
+        PM2.5: {row.get('PM2.5','N/A')}<br>
+        NO2: {row.get('NO2','N/A')}<br>
+        SO2: {row.get('SO2','N/A')}
+        """
+    ).add_to(m)
 
-# -----------------------------
-# ML Model (Source Prediction)
-# -----------------------------
-st.subheader("🤖 Pollution Source Prediction")
+# High risk zones
+threshold = 120
+high_risk = filtered_df[filtered_df["PM2.5"] > threshold]
 
-X = df[["pm25","pm10","no2"]]
-y = df["source"]
+for _, row in high_risk.iterrows():
 
-model = RandomForestClassifier()
-model.fit(X,y)
+    folium.Circle(
+        location=[row["Latitude"], row["Longitude"]],
+        radius=5000,
+        color="darkred",
+        fill=True,
+        fill_opacity=0.4,
+        popup=f"High Risk Zone PM2.5={row['PM2.5']}"
+    ).add_to(m)
 
-pm25 = st.slider("PM2.5 Level",0,300,120)
-pm10 = st.slider("PM10 Level",0,400,150)
-no2 = st.slider("NO2 Level",0,200,40)
+st_folium(m, width=1100, height=550)
 
-if st.button("Predict Pollution Source"):
+st.divider()
 
-    prediction = model.predict([[pm25,pm10,no2]])[0]
+# -------------------------
+# DATA TABLE
+# -------------------------
+st.subheader("📊 Pollution Data")
 
-    st.success(f"Predicted Source: {prediction}")
+columns_to_show = [
+    "Latitude",
+    "Longitude",
+    "PM2.5",
+    "PM10",
+    "NO2",
+    "SO2",
+    "CO",
+    "O3",
+    "pollution_source"
+]
 
-# -----------------------------
-# Data Table
-# -----------------------------
-st.subheader("📄 Pollution Dataset")
+available_cols = [c for c in columns_to_show if c in filtered_df.columns]
 
-st.dataframe(df, width="stretch")
+st.dataframe(filtered_df[available_cols], use_container_width=True)
 
-# -----------------------------
-# Download Report
-# -----------------------------
-st.subheader("⬇ Download Pollution Report")
-
-csv = df.to_csv(index=False).encode("utf-8")
-
-st.download_button(
-    "Download CSV",
-    csv,
-    "pollution_report.csv",
-    "text/csv"
-)
+st.caption("EnviroScan – AI Based Pollution Source Detection Dashboard")
