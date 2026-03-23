@@ -506,3 +506,21 @@ Users can zoom and interact with the map to explore pollution levels in differen
 ✅Conclusion
 
 Module 5 successfully visualizes environmental pollution data using geospatial mapping techniques. This interactive visualization helps in identifying pollution hotspots and supports environmental monitoring and analysis.
+🗺️ Phase 4: Geospatial Mapping & Dashboard (Week 5-6)
+Objective: Create an interactive, user-friendly web interface for real-time monitoring.
+
+Tools Used: Streamlit, Folium, Plotly.
+
+Dashboard Features:
+
+Real-Time Alerts: Dynamic warning banners triggered when pollutant values cross safety thresholds (e.g., > 150 triggers a High-Risk Alert).
+
+Interactive Map: * Heatmap Layer: Visualizes overall pollution intensity.
+
+Source Markers: Custom FontAwesome icons (cars, factories, leaves) indicating predicted sources.
+
+Filter Mechanism: Checkbox layer controls to isolate specific pollution sources.
+
+Trend Analytics: Interactive Plotly pie charts and bar charts displaying national source distribution and top pollutants.
+
+Report Export: A one-click download button allowing users to export the fully labeled and processed dataset as a CSV.
