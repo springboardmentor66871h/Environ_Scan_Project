@@ -241,11 +241,31 @@ ENVIRON-SCAN/
 
 ## 📸 Screenshots
 
-(Add screenshots here)
+## 📸 Screenshots
 
-- Dashboard UI  
-- Pollution Map  
-- Charts  
+### Dashboard Overview
+![Dashboard](screenshots/Dashboard-1.png)
+
+### Dashboard View 2
+![Dashboard](screenshots/Dashboard-2.png)
+
+### Charts & Trends
+![Charts](screenshots/Dashboard-3.png)
+
+### Pollution Map
+![Map](screenshots/Dashboard-4.png)
+
+### Additional View
+![Dashboard](screenshots/Dashboard-5.png)
+
+### Feature Importance
+![Feature Importance](screenshots/feature_importance.png)
+
+### Confusion Matrix
+![Confusion Matrix](screenshots/confusion_matrix.png)
+
+### Label Distribution
+![Label Distribution](screenshots/label_distribution.png)
 
 ---
 
