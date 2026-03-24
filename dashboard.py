@@ -11,7 +11,6 @@ from streamlit_folium import st_folium
 # PAGE CONFIG
 # ------------------------------------------------
 st.set_page_config(page_title="EnviroScan Dashboard", layout="wide")
-
 st.title("🌍 EnviroScan: Pollution Monitoring Dashboard")
 
 # ------------------------------------------------
@@ -20,13 +19,9 @@ st.title("🌍 EnviroScan: Pollution Monitoring Dashboard")
 @st.cache_data
 def load_data():
     df = pd.read_csv("data/processed/final_dataset.csv")
-
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-    df["date"] = df["timestamp"].dt.date
-
     df["city"] = df["city"].astype(str)
     df = df[df["city"] != "nan"]
-
     return df
 
 data = load_data()
@@ -37,20 +32,9 @@ data = load_data()
 @st.cache_resource
 def load_model():
     model_data = joblib.load("models/best_model.joblib")
-
-    if isinstance(model_data, dict):
-        return model_data["model"]
-    return model_data
+    return model_data["model"] if isinstance(model_data, dict) else model_data
 
 model = load_model()
-
-# ------------------------------------------------
-# DATASET RANGE
-# ------------------------------------------------
-min_date = data["date"].min()
-max_date = data["date"].max()
-
-st.info(f"Dataset available from {min_date} to {max_date}")
 
 # ------------------------------------------------
 # SIDEBAR INPUTS
@@ -62,28 +46,24 @@ city = st.sidebar.selectbox(
     sorted(data["city"].dropna().unique())
 )
 
-date = st.sidebar.date_input(
-    "Select Date",
-    value=min_date,
-    min_value=min_date,
-    max_value=max_date
-)
+threshold = st.sidebar.slider("PM2.5 Alert Threshold", 0, 300, 100)
 
-threshold = st.sidebar.slider(
-    "PM2.5 Alert Threshold",
-    0, 300, 100
-)
+# Map controls (moved to sidebar → less flicker)
+st.sidebar.subheader("Map Controls")
+show_heatmap = st.sidebar.checkbox("Show Heatmap", True)
+show_markers = st.sidebar.checkbox("Show Locations")
+show_high = st.sidebar.checkbox("Show High Pollution Areas")
 
 # ------------------------------------------------
-# FILTER DATA
+# FILTER DATA (LATEST)
 # ------------------------------------------------
 filtered_data = data[data["city"] == city]
-filtered_data = filtered_data[filtered_data["date"] == date]
 
 if filtered_data.empty:
-    st.warning("No data available for selected city and date")
+    st.warning("No data available for selected city")
     st.stop()
 
+filtered_data = filtered_data.sort_values(by="timestamp", ascending=False)
 row = filtered_data.iloc[0]
 
 # ------------------------------------------------
@@ -118,24 +98,31 @@ if hasattr(model, "predict_proba"):
     confidence = np.max(model.predict_proba(input_data)) * 100
 
 # ------------------------------------------------
-# DISPLAY INFO
+# SOURCE LABEL
 # ------------------------------------------------
-st.write(f"📍 Location: {city}")
-st.write(f"📅 Date: {date}")
+source_map = {
+    0: "🌿 Natural",
+    1: "🚗 Vehicular",
+    2: "🏭 Industrial",
+    3: "🔥 Burning",
+    4: "🌾 Agricultural"
+}
+predicted_label = source_map.get(prediction, "Unknown")
 
 # ------------------------------------------------
-# METRICS
+# DISPLAY
 # ------------------------------------------------
+st.write(f"📍 Location: {city} (Latest Data)")
+
 st.subheader("Prediction Results")
-
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Predicted Source", prediction)
+col1.metric("Predicted Source", predicted_label)
 col2.metric("Confidence", f"{confidence:.2f}%")
-col3.metric("PM2.5 Level", row["pm25"])
+col3.metric("PM2.5 Level", round(row["pm25"], 2))
 
 # ------------------------------------------------
-# AQI STATUS
+# AQI
 # ------------------------------------------------
 if row["pm25"] <= 50:
     st.success("🟢 Good Air Quality")
@@ -155,9 +142,20 @@ else:
     st.success("Air Quality Within Safe Limits")
 
 # ------------------------------------------------
-# EXPLANATION
+# SOURCE INSIGHT
 # ------------------------------------------------
-st.info(f"The system predicts that pollution is mainly caused by **{prediction}** based on environmental and location features.")
+st.subheader("Source Insight")
+
+if "Vehicular" in predicted_label:
+    st.write("🚗 Traffic emissions are major contributors.")
+elif "Industrial" in predicted_label:
+    st.write("🏭 Industrial pollution detected.")
+elif "Burning" in predicted_label:
+    st.write("🔥 Burning activities contributing.")
+elif "Agricultural" in predicted_label:
+    st.write("🌾 Agricultural pollution detected.")
+else:
+    st.write("🌿 Natural environmental influence.")
 
 # ------------------------------------------------
 # TRENDS
@@ -185,74 +183,47 @@ if "pollution_source" in data.columns:
 
     fig2 = px.pie(
         values=source_counts.values,
-        names=source_counts.index,
-        title="Pollution Source Categories"
+        names=source_counts.index
     )
 
     st.plotly_chart(fig2, width='stretch')
 
 # ------------------------------------------------
-# INTERACTIVE MAP (FINAL FIXED)
+# MAP (NO FLICKER VERSION)
 # ------------------------------------------------
 st.subheader("Pollution Map")
 
-colA, colB, colC = st.columns(3)
-
-with colA:
-    show_heatmap = st.checkbox("Show Heatmap", value=True)
-
-with colB:
-    show_markers = st.checkbox("Show Locations")
-
-with colC:
-    show_high = st.checkbox("Show High Pollution Areas")
-
 map_data = filtered_data[["latitude","longitude","pm25"]].dropna()
 
-if map_data.empty:
-    st.warning("No map data available")
-else:
+if not map_data.empty:
     m = folium.Map(
         location=[map_data["latitude"].mean(), map_data["longitude"].mean()],
         zoom_start=12
     )
 
-    # Heatmap
     if show_heatmap:
         HeatMap(map_data.values.tolist(), radius=15, blur=20).add_to(m)
 
-    # Locations
     if show_markers:
         for _, r in map_data.iterrows():
             folium.CircleMarker(
                 location=[r["latitude"], r["longitude"]],
-                radius=7,
+                radius=6,
                 color="blue",
-                fill=True,
-                fill_color="blue",
-                fill_opacity=0.7,
-                popup=f"PM2.5: {r['pm25']}"
+                fill=True
             ).add_to(m)
 
-    # High Pollution
     if show_high:
         high_data = map_data[map_data["pm25"] > threshold]
+        for _, r in high_data.iterrows():
+            folium.CircleMarker(
+                location=[r["latitude"], r["longitude"]],
+                radius=8,
+                color="red",
+                fill=True
+            ).add_to(m)
 
-        if high_data.empty:
-            st.warning("No high pollution areas for this threshold")
-        else:
-            for _, r in high_data.iterrows():
-                folium.CircleMarker(
-                    location=[r["latitude"], r["longitude"]],
-                    radius=9,
-                    color="red",
-                    fill=True,
-                    fill_color="red",
-                    fill_opacity=0.9,
-                    popup=f"🚨 PM2.5: {r['pm25']}"
-                ).add_to(m)
-
-    st_folium(m, key=f"map_{show_heatmap}_{show_markers}_{show_high}", width=1000, height=500)
+    st_folium(m, width=1000, height=500)
 
 # ------------------------------------------------
 # DOWNLOAD
@@ -261,9 +232,4 @@ st.subheader("Download Report")
 
 csv = city_data.to_csv(index=False).encode("utf-8")
 
-st.download_button(
-    "Download CSV",
-    csv,
-    "pollution_report.csv",
-    "text/csv"
-)
+st.download_button("Download CSV", csv, "pollution_report.csv")
