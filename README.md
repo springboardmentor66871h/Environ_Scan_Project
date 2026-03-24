@@ -1,206 +1,261 @@
 # 🌍 EnviroScan – AI-Powered Pollution Source Identification using Geospatial Analytics
 
-## 📌 Project Overview
-EnviroScan is an AI-driven system designed to identify dominant pollution sources using environmental data, weather conditions, and geospatial proximity features.
-
-The system integrates:
-- Air pollution measurements
-- Weather parameters
-- Geospatial distance features
-- Rule-based source labeling
-
-This project is being developed in milestone phases.
+EnviroScan is an AI-based system designed to identify dominant pollution sources using environmental data, weather conditions, and geospatial features. It combines machine learning and geospatial analytics to provide insights into pollution patterns and sources.
 
 ---
 
-# 🚀 Milestone 1 – Week 1  
-## Data Collection & Dataset Preparation
+## 📌 Problem Statement
 
-### Objective
-Collect and structure environmental data for model development.
+Air pollution monitoring systems typically measure pollutant levels but fail to identify the **source of pollution** (vehicular, industrial, agricultural, etc.).
+
+Without source identification, it becomes difficult to take targeted corrective actions. EnviroScan addresses this gap by predicting pollution sources using environmental and spatial data.
+
+---
+
+## 🎯 Objectives
+
+- Predict pollution sources using machine learning  
+- Visualize pollution trends and hotspots  
+- Provide pollution alerts based on thresholds  
+- Build an interactive dashboard for monitoring  
+
+---
+
+## 📊 Dataset Description
 
 ### Data Sources
-- OpenWeatherMap API (Air Pollution & Weather Data)
-- OpenStreetMap (OSMnx) for geospatial feature extraction
+- OpenWeatherMap API (Pollution + Weather)
+- OpenStreetMap (OSMnx) for geospatial features
 
-### Cities Selected
-- Delhi
-- Mumbai
-- Hyderabad
-- Chennai
-- Kolkata
+### Cities Covered
+- Delhi  
+- Mumbai  
+- Hyderabad  
+- Chennai  
+- Kolkata  
 
-### Data Collected
-Pollution Parameters:
-- PM2.5
-- PM10
-- NO₂
-- CO
-- SO₂
-- O₃
+### Features
 
-Weather Parameters:
-- Temperature
-- Humidity
-- Wind Speed
-- Wind Direction
+#### Pollution Parameters
+- PM2.5, PM10, NO₂, CO, SO₂, O₃  
 
-Geospatial Features:
-- Distance to nearest road
-- Distance to nearest industrial zone
-- Distance to nearest farmland
-- Distance to nearest dump site
+#### Weather Parameters
+- Temperature  
+- Humidity  
+- Wind Speed  
+- Wind Direction  
 
-### Folder Structure
-data/
-├── raw/
-└── processed/
+#### Geospatial Features
+- Distance to road  
+- Distance to industry  
+- Distance to farmland  
+- Distance to dump site  
 
+### Dataset Summary
+- ~14,255 records  
+- Balanced across cities  
+- ~4 months of data  
 
+---
 
-# 🌐 Milestone 1 – Week 2  
-## Geospatial Feature Engineering & Data Merging
+## 🧹 Data Preprocessing
 
-### Key Improvements
-- Created multiple spatial sampling points per city
-- Computed realistic distance-based features using OSMnx
-- Merged pollution, weather, and geospatial datasets
-- Ensured no missing values
-- Verified class balance across cities
+- Converted timestamps into datetime format  
+- Removed missing values and duplicates  
+- Cleaned city names  
+- Generated distance-based features  
+- Structured dataset for modeling  
 
-### Final Dataset
-- 14,255 rows
-- Balanced city distribution
-- Cleaned coordinate handling
-- Structured features ready for labeling
+---
 
-# 🏷 Milestone 2 – Week 3  
-## Pollution Source Labeling (Simulated)
+## 📈 Exploratory Data Analysis (EDA)
 
-### Objective
-Create a target variable `pollution_source` using environmental heuristics.
+- Identified pollution trends across cities  
+- Observed temporal variations in pollutants  
+- Analyzed relationships between weather and pollution  
+- Visualized pollutant distributions  
 
-Since real-world ground truth labels were unavailable, rule-based labeling was implemented using pollutant thresholds and proximity indicators.
+---
+
+## 🏷️ Source Labeling Methodology
+
+Pollution sources were labeled using rule-based logic based on pollutant thresholds and spatial proximity.
 
 ### Label Categories
-- Vehicular
-- Industrial
-- Agricultural
-- Burning
-- Natural
+- Vehicular  
+- Industrial  
+- Agricultural  
+- Burning  
+- Natural  
 
 ### Labeling Logic
 
 **Burning**
-- PM2.5 > 180
-- Distance to dump < 5000m
+- PM2.5 > 180  
+- Distance to dump < 5000m  
 
 **Industrial**
-- SO₂ > 25
-- Distance to industry < 4000m
+- SO₂ > 25  
+- Distance to industry < 4000m  
 
 **Vehicular**
-- NO₂ > 50 & Distance to road < 3000m
-- OR peak traffic hours with moderate NO₂
+- NO₂ > 50 & Distance to road < 3000m  
 
 **Agricultural**
-- PM2.5 > 120
-- Distance to farmland < 6000m
-- Winter / Post-Monsoon season
+- PM2.5 > 120  
+- Distance to farmland < 6000m  
 
 **Natural**
-- Assigned when none of the above conditions were satisfied
+- Default category  
 
-### Assumptions
-- Thresholds were chosen based on AQI standards and environmental research.
-- Proximity to emission sources increases likelihood of source contribution.
-- Seasonal context influences agricultural burning patterns.
+⚠️ **Important Note**:  
+Labels are **simulated** due to lack of real-world ground truth data.
 
-### Limitations
-- Labels are simulated due to absence of verified source-level ground truth.
-- Rule-based logic may introduce bias.
-- Real-world deployment would require validated emission inventory data.
+---
 
+## 🤖 Model Development
 
- 📊 Label Distribution
-A visualization of source distribution is included in: data/processed/label_distribution.png
+### Models Used
+- Decision Tree  
+- Random Forest  
+- XGBoost  
 
+### Training Setup
+- Train-test split: 80/20  
+- Stratified sampling  
+- GridSearchCV for tuning  
 
-🔒 Security Update
-API keys are stored using environment variables and are not included in this repository.
+### Best Model
+XGBoost (highest F1-score)
 
+---
 
-📅 Next Phase
-Milestone 3 (Week 4):
-- Model Training
-- Classification using ML algorithms
-- Performance Evaluation
-- Feature Importance Analysis
+## 📊 Model Evaluation
 
-# 🤖 Milestone  3– Week 4  
-## Model Training & Source Prediction
-
-### Objective
-To train and evaluate machine learning models capable of predicting the `pollution_source` variable.
-
-
-### Models Trained
-- Decision Tree
-- Random Forest
-- XGBoost
-
-Hyperparameter tuning was performed using GridSearchCV with 5-fold cross-validation.
-
-
-
-### Train-Test Split
-- 80% Training Data
-- 20% Testing Data
-- random_state = 42
-- Stratified sampling used
-
-
-
-### Best Model Selected
-XGBoost
-
-Selected based on highest cross-validation weighted F1-score.
-
-### Model Performance (Test Set)
-
-- Accuracy: 99.02%
-- Weighted F1-score: 0.99
-
-All classes achieved strong precision and recall.
-
+- Accuracy: **99.02%**  
+- Weighted F1-score: **0.99**  
 
 ### Interpretation
+High accuracy is expected due to rule-based labeling. Tree-based models effectively learn threshold-based decision rules.
 
-The high performance is expected because the dataset was labeled using deterministic rule-based heuristics. Tree-based models such as XGBoost are highly effective at learning threshold-based decision boundaries.
+---
 
-No significant overfitting was observed as training and testing performance were similar.
+## 🗺️ Geospatial Visualization
+
+- Used **Folium** for mapping  
+- Created pollution heatmaps  
+- Added location markers  
+- Highlighted high pollution areas  
+
+---
+
+## 📊 Dashboard Implementation
+
+The dashboard was built using **Streamlit**.
+
+### Features
+
+- City selection  
+- Pollution source prediction  
+- Confidence score display  
+- AQI status indicator  
+- Pollution alerts  
+- Trend charts  
+- Source distribution visualization  
+- Interactive map with controls  
+- Downloadable pollution reports  
+
+---
+
+## 📌 Results & Outputs
+
+- Successfully predicted pollution sources  
+- Visualized pollution trends and hotspots  
+- Provided alert system for unsafe conditions  
+- Built a user-friendly dashboard  
+
+---
+
+## ⚠️ Limitations
+
+- Rule-based labeling (not real-world verified)  
+- No ground truth data  
+- Limited dataset (~4 months)  
+- Static dataset (not real-time APIs)  
+
+---
+
+## 🚀 Future Enhancements
+
+- Integration with real-time APIs  
+- Advanced ML/DL models  
+- Mobile-based alert system  
+- Satellite data integration  
+- Improved labeling techniques  
+
+---
+
+## 📁 Project Structure
 
 
+ENVIRON-SCAN/
+│
+├── data/
+│ └── processed/
+│ └── final_dataset.csv
+│
+├── models/
+│ └── best_model.joblib
+│
+├── dashboard.py
+├── README.md
 
-### Feature Importance
 
-Most influential features:
-- SO₂
-- PM2.5
-- Distance to Industry
-- Distance to Dump
-- NO₂
-- Distance to Road
+---
 
-This aligns with environmental logic used during rule-based labeling.
+## ▶️ How to Run the Project
 
-### Model Export
+### Install Dependencies
 
-The trained model is saved as:
-models/best_model.joblib
+pip install -r requirements.txt
 
-This model will be integrated into the dashboard in the next milestone.
 
-👩‍💻 Author
-Rushda – CSE (Data Science)
+### Run Dashboard
 
+streamlit run dashboard.py
+
+
+---
+
+## 🛠️ Technologies Used
+
+- Python  
+- Pandas, NumPy  
+- Scikit-learn  
+- XGBoost  
+- Plotly  
+- Folium  
+- Streamlit  
+
+---
+
+## 📸 Screenshots
+
+(Add screenshots here)
+
+- Dashboard UI  
+- Pollution Map  
+- Charts  
+
+---
+
+## 🙌 Conclusion
+
+EnviroScan demonstrates how machine learning and geospatial analytics can be combined to identify pollution sources and provide actionable insights for environmental monitoring.
+
+---
+
+## 👩‍💻 Author
+
+Rushda  
+CSE (Data Science)
