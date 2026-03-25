@@ -325,7 +325,7 @@ if page == "Dashboard":
         st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("---")
-    st.markdown('<div class="subheader-custom">📈 Trend Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subheader-custom"> Trend Analysis</div>', unsafe_allow_html=True)
     
     try:
         trend = filtered_df.groupby(filtered_df['date'].dt.date)['PM2.5'].mean().reset_index()
@@ -538,7 +538,7 @@ elif page == "Cities":
         st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("---")
-    st.markdown('<div class="subheader-custom">🏆 City Rankings</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subheader-custom"> City Rankings</div>', unsafe_allow_html=True)
     
     rankings = city_stats[['city', 'Avg', 'Max', 'Min', 'Count']].copy()
     rankings.insert(0, 'Rank', range(1, len(rankings) + 1))
