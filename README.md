@@ -2,7 +2,7 @@
 
 EnviroScan is an AI-based system designed to identify dominant pollution sources using environmental data, weather conditions, and geospatial features. It combines machine learning and geospatial analytics to provide insights into pollution patterns and sources.
 
----
+
 
 ## 📌 Problem Statement
 
@@ -10,7 +10,6 @@ Air pollution monitoring systems typically measure pollutant levels but fail to 
 
 Without source identification, it becomes difficult to take targeted corrective actions. EnviroScan addresses this gap by predicting pollution sources using environmental and spatial data.
 
----
 
 ## 🎯 Objectives
 
@@ -19,7 +18,6 @@ Without source identification, it becomes difficult to take targeted corrective 
 - Provide pollution alerts based on thresholds  
 - Build an interactive dashboard for monitoring  
 
----
 
 ## 📊 Dataset Description
 
@@ -56,7 +54,7 @@ Without source identification, it becomes difficult to take targeted corrective 
 - Balanced across cities  
 - ~4 months of data  
 
----
+
 
 ## 🧹 Data Preprocessing
 
@@ -66,7 +64,6 @@ Without source identification, it becomes difficult to take targeted corrective 
 - Generated distance-based features  
 - Structured dataset for modeling  
 
----
 
 ## 📈 Exploratory Data Analysis (EDA)
 
@@ -75,7 +72,7 @@ Without source identification, it becomes difficult to take targeted corrective 
 - Analyzed relationships between weather and pollution  
 - Visualized pollutant distributions  
 
----
+
 
 ## 🏷️ Source Labeling Methodology
 
@@ -111,7 +108,7 @@ Pollution sources were labeled using rule-based logic based on pollutant thresho
 ⚠️ **Important Note**:  
 Labels are **simulated** due to lack of real-world ground truth data.
 
----
+
 
 ## 🤖 Model Development
 
@@ -128,7 +125,7 @@ Labels are **simulated** due to lack of real-world ground truth data.
 ### Best Model
 XGBoost (highest F1-score)
 
----
+
 
 ## 📊 Model Evaluation
 
@@ -138,8 +135,6 @@ XGBoost (highest F1-score)
 ### Interpretation
 High accuracy is expected due to rule-based labeling. Tree-based models effectively learn threshold-based decision rules.
 
----
-
 ## 🗺️ Geospatial Visualization
 
 - Used **Folium** for mapping  
@@ -147,7 +142,6 @@ High accuracy is expected due to rule-based labeling. Tree-based models effectiv
 - Added location markers  
 - Highlighted high pollution areas  
 
----
 
 ## 📊 Dashboard Implementation
 
@@ -165,7 +159,6 @@ The dashboard was built using **Streamlit**.
 - Interactive map with controls  
 - Downloadable pollution reports  
 
----
 
 ## 📌 Results & Outputs
 
@@ -174,7 +167,6 @@ The dashboard was built using **Streamlit**.
 - Provided alert system for unsafe conditions  
 - Built a user-friendly dashboard  
 
----
 
 ## ⚠️ Limitations
 
@@ -183,7 +175,7 @@ The dashboard was built using **Streamlit**.
 - Limited dataset (~4 months)  
 - Static dataset (not real-time APIs)  
 
----
+
 
 ## 🚀 Future Enhancements
 
@@ -193,7 +185,6 @@ The dashboard was built using **Streamlit**.
 - Satellite data integration  
 - Improved labeling techniques  
 
----
 
 ## 📁 Project Structure
 
@@ -211,8 +202,6 @@ ENVIRON-SCAN/
 ├── README.md
 
 
----
-
 ## ▶️ How to Run the Project
 
 ### Install Dependencies
@@ -225,7 +214,7 @@ ENVIRON-SCAN/
         streamlit run dashboard.py
 
 
----
+
 
 ## 🛠️ Technologies Used
 
@@ -237,43 +226,23 @@ ENVIRON-SCAN/
 - Folium  
 - Streamlit  
 
----
+## 📸 Dashboard Screenshots
 
-## 📸 Screenshots
+### 🔹 Main Dashboard
+<img src="screenshots/Dashboard-1.png" width="600">
 
-## 📸 Screenshots
+### 🔹 Pollution Trends
+<img src="screenshots/Dashboard-2.png" width="600">
 
-### Dashboard Overview
-![Dashboard](screenshots/Dashboard-1.png)
+### 🔹 Pollution Map
+<img src="screenshots/Dashboard-3.png" width="600">
 
-### Dashboard View 2
-![Dashboard](screenshots/Dashboard-2.png)
 
-### Charts & Trends
-![Charts](screenshots/Dashboard-3.png)
-
-### Pollution Map
-![Map](screenshots/Dashboard-4.png)
-
-### Additional View
-![Dashboard](screenshots/Dashboard-5.png)
-
-### Feature Importance
-![Feature Importance](screenshots/feature_importance.png)
-
-### Confusion Matrix
-![Confusion Matrix](screenshots/confusion_matrix.png)
-
-### Label Distribution
-![Label Distribution](screenshots/label_distribution.png)
-
----
 
 ## 🙌 Conclusion
 
 EnviroScan demonstrates how machine learning and geospatial analytics can be combined to identify pollution sources and provide actionable insights for environmental monitoring.
 
----
 
 ## 👩‍💻 Author
 
