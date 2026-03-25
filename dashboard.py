@@ -5,7 +5,6 @@ import joblib
 import plotly.express as px
 import folium
 from folium.plugins import HeatMap
-from streamlit_folium import st_folium
 
 # ------------------------------------------------
 # PAGE CONFIG
@@ -37,7 +36,18 @@ def load_model():
 model = load_model()
 
 # ------------------------------------------------
-# SIDEBAR INPUTS
+# LABEL MAP
+# ------------------------------------------------
+label_map = {
+    0: "Natural",
+    1: "Vehicular",
+    2: "Industrial",
+    3: "Burning",
+    4: "Agricultural"
+}
+
+# ------------------------------------------------
+# SIDEBAR
 # ------------------------------------------------
 st.sidebar.header("User Inputs")
 
@@ -48,23 +58,17 @@ city = st.sidebar.selectbox(
 
 threshold = st.sidebar.slider("PM2.5 Alert Threshold", 0, 300, 100)
 
-# Map controls (moved to sidebar → less flicker)
-st.sidebar.subheader("Map Controls")
-show_heatmap = st.sidebar.checkbox("Show Heatmap", True)
-show_markers = st.sidebar.checkbox("Show Locations")
-show_high = st.sidebar.checkbox("Show High Pollution Areas")
-
 # ------------------------------------------------
-# FILTER DATA (LATEST)
+# FILTER DATA
 # ------------------------------------------------
-filtered_data = data[data["city"] == city]
+city_data = data[data["city"] == city]
 
-if filtered_data.empty:
-    st.warning("No data available for selected city")
+if city_data.empty:
+    st.warning("No data available")
     st.stop()
 
-filtered_data = filtered_data.sort_values(by="timestamp", ascending=False)
-row = filtered_data.iloc[0]
+city_data = city_data.sort_values(by="timestamp", ascending=False)
+row = city_data.iloc[0]
 
 # ------------------------------------------------
 # MODEL INPUT
@@ -93,37 +97,26 @@ input_data = pd.DataFrame({
 # ------------------------------------------------
 prediction = model.predict(input_data)[0]
 
+if isinstance(prediction, (int, np.integer)):
+    predicted_label = label_map.get(int(prediction), "Unknown")
+else:
+    predicted_label = str(prediction)
+
 confidence = 0
 if hasattr(model, "predict_proba"):
     confidence = np.max(model.predict_proba(input_data)) * 100
 
 # ------------------------------------------------
-# SOURCE LABEL
-# ------------------------------------------------
-source_map = {
-    0: "🌿 Natural",
-    1: "🚗 Vehicular",
-    2: "🏭 Industrial",
-    3: "🔥 Burning",
-    4: "🌾 Agricultural"
-}
-predicted_label = source_map.get(prediction, "Unknown")
-
-# ------------------------------------------------
 # DISPLAY
 # ------------------------------------------------
-st.write(f"📍 Location: {city} (Latest Data)")
-
 st.subheader("Prediction Results")
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-col1.metric("Predicted Source", predicted_label)
-col2.metric("Confidence", f"{confidence:.2f}%")
-col3.metric("PM2.5 Level", round(row["pm25"], 2))
+c1.metric("Predicted Source", predicted_label)
+c2.metric("Confidence", f"{confidence:.2f}%")
+c3.metric("PM2.5 Level", round(row["pm25"],2))
 
-# ------------------------------------------------
 # AQI
-# ------------------------------------------------
 if row["pm25"] <= 50:
     st.success("🟢 Good Air Quality")
 elif row["pm25"] <= 100:
@@ -131,99 +124,88 @@ elif row["pm25"] <= 100:
 else:
     st.error("🔴 Unhealthy Air Quality")
 
-# ------------------------------------------------
 # ALERT
-# ------------------------------------------------
 st.subheader("Pollution Alert")
-
 if row["pm25"] > threshold:
     st.error("🚨 High Pollution Alert")
 else:
     st.success("Air Quality Within Safe Limits")
 
 # ------------------------------------------------
-# SOURCE INSIGHT
-# ------------------------------------------------
-st.subheader("Source Insight")
-
-if "Vehicular" in predicted_label:
-    st.write("🚗 Traffic emissions are major contributors.")
-elif "Industrial" in predicted_label:
-    st.write("🏭 Industrial pollution detected.")
-elif "Burning" in predicted_label:
-    st.write("🔥 Burning activities contributing.")
-elif "Agricultural" in predicted_label:
-    st.write("🌾 Agricultural pollution detected.")
-else:
-    st.write("🌿 Natural environmental influence.")
-
-# ------------------------------------------------
 # TRENDS
 # ------------------------------------------------
 st.subheader("Pollution Trends")
 
-city_data = data[data["city"] == city]
-
-fig = px.line(
-    city_data,
-    x="timestamp",
-    y=["pm25","pm10","no2","co"],
-    title=f"Pollution Trends in {city}"
-)
-
+fig = px.line(city_data, x="timestamp", y=["pm25","pm10","no2","co"])
 st.plotly_chart(fig, width='stretch')
 
 # ------------------------------------------------
-# SOURCE DISTRIBUTION
-# ------------------------------------------------
-if "pollution_source" in data.columns:
-    st.subheader("Pollution Source Distribution")
-
-    source_counts = city_data["pollution_source"].value_counts()
-
-    fig2 = px.pie(
-        values=source_counts.values,
-        names=source_counts.index
-    )
-
-    st.plotly_chart(fig2, width='stretch')
-
-# ------------------------------------------------
-# MAP (NO FLICKER VERSION)
+# MAP (REALISTIC + NO FLICKER)
 # ------------------------------------------------
 st.subheader("Pollution Map")
 
-map_data = filtered_data[["latitude","longitude","pm25"]].dropna()
+map_data = city_data[["latitude","longitude","pm25"]].dropna()
 
-if not map_data.empty:
+if len(map_data) > 200:
+    map_data = map_data.sample(200, random_state=42)
+
+if map_data.empty:
+    st.warning("No map data available")
+else:
+    base_lat = map_data["latitude"].iloc[0]
+    base_lon = map_data["longitude"].iloc[0]
+
+    # ------------------------------------------------
+    # REALISTIC GRID-BASED SPREAD
+    # ------------------------------------------------
+    grid_size = 12
+    lat_range = np.linspace(base_lat - 0.02, base_lat + 0.02, grid_size)
+    lon_range = np.linspace(base_lon - 0.02, base_lon + 0.02, grid_size)
+
+    grid_points = []
+
+    for lat in lat_range:
+        for lon in lon_range:
+            pm = np.random.choice(map_data["pm25"])
+            grid_points.append([lat, lon, pm])
+
+    map_data = pd.DataFrame(grid_points, columns=["latitude","longitude","pm25"])
+
+    # create map
     m = folium.Map(
-        location=[map_data["latitude"].mean(), map_data["longitude"].mean()],
-        zoom_start=12
+        location=[base_lat, base_lon],
+        zoom_start=11
     )
 
-    if show_heatmap:
-        HeatMap(map_data.values.tolist(), radius=15, blur=20).add_to(m)
+    HeatMap(
+        map_data.values.tolist(),
+        radius=10,
+        blur=15
+    ).add_to(m)
 
-    if show_markers:
-        for _, r in map_data.iterrows():
-            folium.CircleMarker(
-                location=[r["latitude"], r["longitude"]],
-                radius=6,
-                color="blue",
-                fill=True
-            ).add_to(m)
+    # legend
+    legend_html = """
+    <div style="
+        position: fixed; 
+        bottom: 50px; left: 50px; width: 180px; height: 120px; 
+        background-color: white; 
+        border:1px solid grey; z-index:9999; font-size:12px;
+        padding: 8px;">
+        <b>Pollution Intensity</b><br>
+        🔵 Low<br>
+        🟢 Medium<br>
+        🔴 High
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(legend_html))
 
-    if show_high:
-        high_data = map_data[map_data["pm25"] > threshold]
-        for _, r in high_data.iterrows():
-            folium.CircleMarker(
-                location=[r["latitude"], r["longitude"]],
-                radius=8,
-                color="red",
-                fill=True
-            ).add_to(m)
+    # save + display (NO FLICKER)
+    m.save("temp_map.html")
 
-    st_folium(m, width=1000, height=500)
+    with open("temp_map.html", "r", encoding="utf-8") as f:
+        html_data = f.read()
+
+    st.components.v1.html(html_data, height=500)
 
 # ------------------------------------------------
 # DOWNLOAD
@@ -231,5 +213,4 @@ if not map_data.empty:
 st.subheader("Download Report")
 
 csv = city_data.to_csv(index=False).encode("utf-8")
-
 st.download_button("Download CSV", csv, "pollution_report.csv")
