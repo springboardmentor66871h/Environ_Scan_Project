@@ -186,11 +186,6 @@ The dashboard was built using **Streamlit**.
 - Improved labeling techniques  
 
 
-**📁 Project Structure**
-
-
-
-
 **▶️ How to Run the Project*
 
 **Install Dependencies**
