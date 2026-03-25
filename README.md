@@ -1,17 +1,17 @@
-# 🌍 EnviroScan – AI-Powered Pollution Source Identification using Geospatial Analytics
+**🌍 EnviroScan – AI-Powered Pollution Source Identification using Geospatial Analytics**
 
 EnviroScan is an AI-based system designed to identify dominant pollution sources using environmental data, weather conditions, and geospatial features. It combines machine learning and geospatial analytics to provide insights into pollution patterns and sources.
 
 
 
-## 📌 Problem Statement
+** 📌 Problem Statement**
 
 Air pollution monitoring systems typically measure pollutant levels but fail to identify the **source of pollution** (vehicular, industrial, agricultural, etc.).
 
 Without source identification, it becomes difficult to take targeted corrective actions. EnviroScan addresses this gap by predicting pollution sources using environmental and spatial data.
 
 
-## 🎯 Objectives
+** 🎯 Objectives **
 
 - Predict pollution sources using machine learning  
 - Visualize pollution trends and hotspots  
@@ -19,44 +19,44 @@ Without source identification, it becomes difficult to take targeted corrective 
 - Build an interactive dashboard for monitoring  
 
 
-## 📊 Dataset Description
+**📊 Dataset Description**
 
-### Data Sources
+** Data Sources**
 - OpenWeatherMap API (Pollution + Weather)
 - OpenStreetMap (OSMnx) for geospatial features
 
-### Cities Covered
+** Cities Covered**
 - Delhi  
 - Mumbai  
 - Hyderabad  
 - Chennai  
 - Kolkata  
 
-### Features
+** Features **
 
-#### Pollution Parameters
-- PM2.5, PM10, NO₂, CO, SO₂, O₃  
+** Pollution Parameters **
+- PM2.5, PM10, NO₂, CO, SO₂, O₃ 
 
-#### Weather Parameters
+** Weather Parameters**
 - Temperature  
 - Humidity  
 - Wind Speed  
 - Wind Direction  
 
-#### Geospatial Features
+** Geospatial Features **
 - Distance to road  
 - Distance to industry  
 - Distance to farmland  
 - Distance to dump site  
 
-### Dataset Summary
+**  Dataset Summary **
 - ~14,255 records  
 - Balanced across cities  
 - ~4 months of data  
 
 
 
-## 🧹 Data Preprocessing
+** 🧹 Data Preprocessing **
 
 - Converted timestamps into datetime format  
 - Removed missing values and duplicates  
@@ -65,7 +65,7 @@ Without source identification, it becomes difficult to take targeted corrective 
 - Structured dataset for modeling  
 
 
-## 📈 Exploratory Data Analysis (EDA)
+** 📈 Exploratory Data Analysis (EDA) **
 
 - Identified pollution trends across cities  
 - Observed temporal variations in pollutants  
@@ -74,18 +74,18 @@ Without source identification, it becomes difficult to take targeted corrective 
 
 
 
-## 🏷️ Source Labeling Methodology
+** 🏷️ Source Labeling Methodology **
 
 Pollution sources were labeled using rule-based logic based on pollutant thresholds and spatial proximity.
 
-### Label Categories
+** Label Categories **
 - Vehicular  
 - Industrial  
 - Agricultural  
 - Burning  
 - Natural  
 
-### Labeling Logic
+**Labeling Logic **
 
 **Burning**
 - PM2.5 > 180  
@@ -110,32 +110,32 @@ Labels are **simulated** due to lack of real-world ground truth data.
 
 
 
-## 🤖 Model Development
+**🤖 Model Development **
 
-### Models Used
+** Models Used **
 - Decision Tree  
 - Random Forest  
 - XGBoost  
 
-### Training Setup
+** Training Setup **
 - Train-test split: 80/20  
 - Stratified sampling  
 - GridSearchCV for tuning  
 
-### Best Model
+** Best Model **
 XGBoost (highest F1-score)
 
 
 
-## 📊 Model Evaluation
+** 📊 Model Evaluation **
 
 - Accuracy: **99.02%**  
 - Weighted F1-score: **0.99**  
 
-### Interpretation
+** Interpretation **
 High accuracy is expected due to rule-based labeling. Tree-based models effectively learn threshold-based decision rules.
 
-## 🗺️ Geospatial Visualization
+** 🗺️ Geospatial Visualization **
 
 - Used **Folium** for mapping  
 - Created pollution heatmaps  
@@ -143,11 +143,11 @@ High accuracy is expected due to rule-based labeling. Tree-based models effectiv
 - Highlighted high pollution areas  
 
 
-## 📊 Dashboard Implementation
+** 📊 Dashboard Implementation **
 
 The dashboard was built using **Streamlit**.
 
-### Features
+**  Features **
 
 - City selection  
 - Pollution source prediction  
@@ -160,7 +160,7 @@ The dashboard was built using **Streamlit**.
 - Downloadable pollution reports  
 
 
-## 📌 Results & Outputs
+**📌 Results & Outputs **
 
 - Successfully predicted pollution sources  
 - Visualized pollution trends and hotspots  
@@ -168,7 +168,7 @@ The dashboard was built using **Streamlit**.
 - Built a user-friendly dashboard  
 
 
-## ⚠️ Limitations
+**⚠️ Limitations **
 
 - Rule-based labeling (not real-world verified)  
 - No ground truth data  
@@ -177,7 +177,7 @@ The dashboard was built using **Streamlit**.
 
 
 
-## 🚀 Future Enhancements
+** 🚀 Future Enhancements **
 
 - Integration with real-time APIs  
 - Advanced ML/DL models  
@@ -186,7 +186,7 @@ The dashboard was built using **Streamlit**.
 - Improved labeling techniques  
 
 
-## 📁 Project Structure
+** 📁 Project Structure **
 
 
 ENVIRON-SCAN/
@@ -202,21 +202,17 @@ ENVIRON-SCAN/
 ├── README.md
 
 
-## ▶️ How to Run the Project
+**▶️ How to Run the Project*
 
-### Install Dependencies
+** Install Dependencies **
 
         pip install -r requirements.txt
 
-
-### Run Dashboard
+** Run Dashboard **
 
         streamlit run dashboard.py
 
-
-
-
-## 🛠️ Technologies Used
+** 🛠️ Technologies Used **
 
 - Python  
 - Pandas, NumPy  
@@ -226,24 +222,24 @@ ENVIRON-SCAN/
 - Folium  
 - Streamlit  
 
-## 📸 Dashboard Screenshots
+** 📸 Dashboard Screenshots **
 
-### 🔹 Main Dashboard
+** 🔹 Main Dashboard **
 <img src="screenshots/Dashboard-1.png" width="600">
 
-### 🔹 Pollution Trends
+** 🔹 Pollution Trends **
 <img src="screenshots/Dashboard-2.png" width="600">
 
-### 🔹 Pollution Map
+** 🔹 Pollution Map **
 <img src="screenshots/Dashboard-3.png" width="600">
 
 
 
-## 🙌 Conclusion
+** 🙌 Conclusion **
 
 EnviroScan demonstrates how machine learning and geospatial analytics can be combined to identify pollution sources and provide actionable insights for environmental monitoring.
 
 
-## 👩‍💻 Author
+** 👩‍💻 Author **
 
 Rushda  
