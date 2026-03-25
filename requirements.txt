@@ -1,10 +1,23 @@
+# Data Manipulation & Math
 pandas
 numpy
+
+# Machine Learning
 scikit-learn
 xgboost
+
+# Geospatial Analysis
 folium
-streamlit
-plotly
 osmnx
 geopandas
 shapely
+requests
+
+# Visualization & Dashboard
+streamlit
+plotly
+matplotlib
+seaborn
+
+# Model Persistence
+joblib
