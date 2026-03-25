@@ -1,5 +1,5 @@
-EnviroScan Elite Pro
-AI-Powered Environmental Intelligence & Pollution Analysis System
+**EnviroScan Elite Pro**
+**AI-Powered Environmental Intelligence & Pollution Analysis System**
 
  **Description**
 
