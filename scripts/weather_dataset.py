@@ -3,9 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import time
 
-# --------------------------
-# Same 10 Cities
-# --------------------------
+
 
 cities = {
     "Delhi": (28.6139, 77.2090),
@@ -20,9 +18,6 @@ cities = {
     "Lucknow": (26.8467, 80.9462)
 }
 
-# --------------------------
-# Date Range (Same 30 Days)
-# --------------------------
 
 end_date = datetime.today()
 start_date = end_date - timedelta(days=90)
@@ -32,9 +27,7 @@ end = end_date.strftime("%Y-%m-%d")
 
 all_data = []
 
-# --------------------------
-# Fetch Weather Data
-# --------------------------
+
 
 for city, (lat, lon) in cities.items():
     print(f"Fetching weather data for {city}...")
@@ -70,13 +63,10 @@ for city, (lat, lon) in cities.items():
     except Exception as e:
         print(f"Error for {city}: {e}")
 
-# --------------------------
-# Save CSV
-# --------------------------
 
 df = pd.DataFrame(all_data)
 
 df.to_csv(r"C:\Users\admin\Environ_Scan_Project\weather.csv", index=False)
 
-print("\n✅ Weather data collection completed!")
+print("\n Weather data collection completed!")
 print("Total records:", len(df))
