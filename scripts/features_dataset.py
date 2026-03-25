@@ -2,9 +2,7 @@ import osmnx as ox
 import pandas as pd
 from geopy.distance import geodesic
 
-# --------------------------
-# Same 10 Cities
-# --------------------------
+
 
 cities = {
     "Delhi": (28.6139, 77.2090),
@@ -21,9 +19,7 @@ cities = {
 
 all_features = []
 
-# --------------------------
-# Extract OSM Features
-# --------------------------
+
 
 for city, (lat, lon) in cities.items():
     print(f"Processing {city}...")
@@ -65,12 +61,10 @@ for city, (lat, lon) in cities.items():
     except Exception as e:
         print(f"Error in {city}: {e}")
 
-# --------------------------
-# Save CSV
-# --------------------------
+
 
 df = pd.DataFrame(all_features)
 df.to_csv(r"C:\Users\admin\Environ_Scan_Project\location_features.csv", index=False)
 
-print("\n✅ Location feature extraction completed!")
+print("\n Location feature extraction completed!")
 print("Total cities processed:", len(df))
