@@ -1,185 +1,205 @@
+import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
 import folium
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
+from datetime import datetime
+import joblib
+import pyttsx3
 
 st.set_page_config(page_title="EnviroScan Dashboard", layout="wide")
 
 st.title("🌍 EnviroScan – Air Pollution Intelligence Dashboard")
 
 # -------------------------
+# SIDEBAR NAVIGATION
+# -------------------------
+st.sidebar.title("📂 Navigate")
+
+page = st.sidebar.radio(
+    "Go to",
+    ["Dashboard", "Pie Chart", "Map", "History", "Downloads"]
+)
+
+# -------------------------
+# DARK MODE
+# -------------------------
+dark_mode = st.sidebar.toggle("🌙 Dark Mode", value=False)
+
+if dark_mode:
+    st.markdown("""
+        <style>
+        body {background-color: #0E1117; color: white;}
+        </style>
+    """, unsafe_allow_html=True)
+
+# -------------------------
+# SEARCH FILTER (ONLY FILTER)
+# -------------------------
+st.sidebar.header("Search")
+search_location = st.sidebar.text_input("🔎 Search Area / City / State")
+
+# -------------------------
 # LOAD DATA
 # -------------------------
 @st.cache_data
 def load_data():
-    df = pd.read_csv("../data/processed/final_labeled_dataset.csv")
-    return df
+    return pd.read_csv("../data/processed/final_labeled_dataset.csv")
 
 df = load_data()
-
-# Remove rows with missing coordinates
 df = df.dropna(subset=["Latitude", "Longitude"])
 
-# -------------------------
-# SIDEBAR FILTERS
-# -------------------------
-st.sidebar.header("Filters")
-
-# STATE FILTER
-if "state" in df.columns:
-    states = ["All"] + sorted(df["state"].dropna().unique())
-    selected_state = st.sidebar.selectbox("Select State", states)
-else:
-    selected_state = "All"
-
-# CITY FILTER
-if "city" in df.columns:
-    if selected_state != "All":
-        cities = ["All"] + sorted(df[df["state"] == selected_state]["city"].dropna().unique())
-    else:
-        cities = ["All"] + sorted(df["city"].dropna().unique())
-    selected_city = st.sidebar.selectbox("Select City", cities)
-else:
-    selected_city = "All"
-
-# POLLUTION SOURCE FILTER
-sources = sorted(df["pollution_source"].dropna().unique())
-selected_sources = st.sidebar.multiselect("Pollution Source", sources, default=sources)
-
-# SEARCH FILTER
-search_location = st.sidebar.text_input(
-    "Search Area / City / State",
-    placeholder="Type Chennai, Delhi, Mumbai..."
-)
-
-# -------------------------
-# APPLY FILTERS
-# -------------------------
+# SEARCH WORKING FILTER ⭐
 filtered_df = df.copy()
 
-# Source filter
-filtered_df = filtered_df[filtered_df["pollution_source"].isin(selected_sources)]
-
-# State filter
-if selected_state != "All" and "state" in filtered_df.columns:
-    filtered_df = filtered_df[filtered_df["state"] == selected_state]
-
-# City filter
-if selected_city != "All" and "city" in filtered_df.columns:
-    filtered_df = filtered_df[filtered_df["city"] == selected_city]
-
-# Search filter
 if search_location:
     search_location = search_location.lower()
+    filtered_df = filtered_df[
+        filtered_df.astype(str)
+        .apply(lambda row: row.str.lower().str.contains(search_location).any(), axis=1)
+    ]
 
-    if "city" in filtered_df.columns:
-        filtered_df = filtered_df[
-            filtered_df["city"].str.lower().str.contains(search_location, na=False)
-        ]
-
-    if "state" in filtered_df.columns:
-        filtered_df = filtered_df[
-            filtered_df["state"].str.lower().str.contains(search_location, na=False)
-        ]
-
-# -------------------------
-# CHECK DATA
-# -------------------------
 if filtered_df.empty:
-    st.warning("No pollution data available for this location.")
+    st.warning("No matching data found.")
     st.stop()
 
 # -------------------------
-# METRICS
+# LOAD MODEL
 # -------------------------
-col1, col2, col3 = st.columns(3)
+@st.cache_resource
+def load_model():
+    return joblib.load("../models/pollution_model.pkl")
 
-col1.metric("Total Records", len(filtered_df))
-col2.metric("Average PM2.5", round(filtered_df["PM2.5"].mean(), 2))
-col3.metric("Pollution Sources", filtered_df["pollution_source"].nunique())
-
-st.divider()
+model = load_model()
 
 # -------------------------
-# MAP
+# AQI FUNCTION
 # -------------------------
-st.subheader("🗺 Pollution Map")
+def get_aqi_info(aqi):
+    if aqi <= 50:
+        return "Good 🟢", "Air quality is satisfactory."
+    elif aqi <= 100:
+        return "Moderate 🟡", "Acceptable air quality."
+    elif aqi <= 150:
+        return "Unhealthy for Sensitive 🟠", "Sensitive groups careful."
+    elif aqi <= 200:
+        return "Unhealthy 🔴", "Everyone may feel effects."
+    elif aqi <= 300:
+        return "Very Unhealthy 🟣", "Health warnings."
+    else:
+        return "Hazardous ⚫", "Serious health effects!"
 
-center_lat = filtered_df["Latitude"].mean()
-center_lon = filtered_df["Longitude"].mean()
+# =====================================================
+# PAGE 1 — DASHBOARD
+# =====================================================
+if page == "Dashboard":
 
-m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Records", len(filtered_df))
+    col2.metric("Average PM2.5", round(filtered_df["PM2.5"].mean(), 2))
+    col3.metric("Pollution Sources", filtered_df["pollution_source"].nunique())
 
-# Heatmap
-heat_data = filtered_df[["Latitude", "Longitude", "PM2.5"]].dropna().values.tolist()
-HeatMap(heat_data).add_to(m)
+    st.divider()
 
-# Source markers
-color_map = {
-    "Vehicular": "blue",
-    "Industrial": "red",
-    "Agricultural": "green",
-    "Burning": "orange",
-    "Natural": "purple"
-}
+    # AQI
+    st.subheader("🌫 Air Quality Index")
+    aqi_value = int(filtered_df["PM2.5"].mean())
+    status, message = get_aqi_info(aqi_value)
 
-for _, row in filtered_df.iterrows():
+    st.success(f"AQI: {aqi_value} — {status}")
+    st.info(message)
 
-    color = color_map.get(row["pollution_source"], "gray")
+    # Voice alert
+    def speak(text):
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
 
-    folium.CircleMarker(
-        location=[row["Latitude"], row["Longitude"]],
-        radius=6,
-        color=color,
-        fill=True,
-        fill_opacity=0.7,
-        popup=f"""
-        Source: {row['pollution_source']}<br>
-        PM2.5: {row.get('PM2.5','N/A')}<br>
-        NO2: {row.get('NO2','N/A')}<br>
-        SO2: {row.get('SO2','N/A')}
-        """
-    ).add_to(m)
+    if st.button("🔊 Speak Air Quality"):
+        speak(f"Air quality is {status}. {message}")
 
-# High risk zones
-threshold = 120
-high_risk = filtered_df[filtered_df["PM2.5"] > threshold]
+    # AI Prediction
+    try:
+        sample = filtered_df.iloc[0]
+        features = [
+            sample["PM2.5"], sample["PM10"], sample["NO2"],
+            sample["SO2"], sample["CO"], sample["O3"]
+        ]
+        prediction = model.predict([features])[0]
+        st.subheader("🤖 AI Prediction")
+        st.success(f"Predicted Source: {prediction}")
+    except:
+        st.warning("Model prediction unavailable.")
 
-for _, row in high_risk.iterrows():
+# =====================================================
+# PAGE 2 — PIE CHART ⭐
+# =====================================================
+elif page == "Pie Chart":
 
-    folium.Circle(
-        location=[row["Latitude"], row["Longitude"]],
-        radius=5000,
-        color="darkred",
-        fill=True,
-        fill_opacity=0.4,
-        popup=f"High Risk Zone PM2.5={row['PM2.5']}"
-    ).add_to(m)
+    st.header("📊 Pollution Source Distribution")
 
-st_folium(m, width=1100, height=550)
+    source_counts = filtered_df["pollution_source"].value_counts()
 
-st.divider()
+    fig, ax = plt.subplots()
+    ax.pie(source_counts, labels=source_counts.index, autopct="%1.1f%%")
+    ax.axis("equal")
 
-# -------------------------
-# DATA TABLE
-# -------------------------
-st.subheader("📊 Pollution Data")
+    st.pyplot(fig)
 
-columns_to_show = [
-    "Latitude",
-    "Longitude",
-    "PM2.5",
-    "PM10",
-    "NO2",
-    "SO2",
-    "CO",
-    "O3",
-    "pollution_source"
-]
+# =====================================================
+# PAGE 3 — MAP
+# =====================================================
+elif page == "Map":
 
-available_cols = [c for c in columns_to_show if c in filtered_df.columns]
+    st.header("🗺 Pollution Heatmap")
 
-st.dataframe(filtered_df[available_cols], use_container_width=True)
+    center_lat = filtered_df["Latitude"].mean()
+    center_lon = filtered_df["Longitude"].mean()
 
-st.caption("EnviroScan – AI Based Pollution Source Detection Dashboard")
+    m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
+
+    HeatMap(filtered_df[["Latitude", "Longitude", "PM2.5"]].values.tolist()).add_to(m)
+
+    for _, row in filtered_df.iterrows():
+        folium.CircleMarker(
+            location=[row["Latitude"], row["Longitude"]],
+            radius=6,
+            popup=f"{row['pollution_source']} | PM2.5: {row['PM2.5']}"
+        ).add_to(m)
+
+    st_folium(m, width=1100, height=500)
+
+# =====================================================
+# PAGE 4 — HISTORY
+# =====================================================
+elif page == "History":
+
+    st.header("📈 Pollution Trend Analysis")
+
+    st.write("This graph shows how PM2.5 levels vary across recorded observations.")
+
+    fig, ax = plt.subplots(figsize=(10,4))
+    ax.plot(filtered_df["PM2.5"].reset_index(drop=True))
+    ax.set_xlabel("Observation Number")
+    ax.set_ylabel("PM2.5 Level")
+    ax.set_title("PM2.5 Variation Trend")
+
+    st.pyplot(fig)
+# =====================================================
+# PAGE 5 — DOWNLOADS
+# =====================================================
+elif page == "Downloads":
+
+    st.header("⬇ Download Data")
+
+    csv = filtered_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download Filtered Dataset",
+        csv,
+        "pollution_data.csv",
+        "text/csv"
+    )
+
+# FOOTER
+st.caption(f"🕒 Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
