@@ -1,17 +1,17 @@
-# 🌍 EnviroScan: AI-Based Pollution Source Identification System
+**EnviroScan: AI-Based Pollution Source Identification System
 
 **EnviroScan** is an intelligent environmental monitoring system that predicts pollution sources using machine learning and visualizes them through an interactive geospatial dashboard. By combining CPCB data with meteorological factors, it identifies whether pollution stems from industrial, vehicular, or agricultural activities.
 
 ---
 
-## 📌 Problem Statement
+** Problem Statement
 Air pollution is a critical global crisis. While existing systems provide an Air Quality Index (AQI), they often fail to identify **why** the air is polluted. Without identifying the specific source (e.g., a nearby factory vs. heavy traffic), policy interventions remain generic.
 
 **EnviroScan bridges this gap** using predictive analytics to pinpoint pollution sources for better decision-making.
 
 ---
 
-## 🎯 Objectives
+## Objectives
 - Predict pollution sources using Machine Learning  
 - Visualize pollution hotspots using geospatial maps  
 - Integrate real-time CPCB + weather API data  
@@ -19,7 +19,7 @@ Air pollution is a critical global crisis. While existing systems provide an Air
 
 ---
 
-## 📊 Dataset Description
+## Dataset Description
 - **Source:** CPCB & OpenAQ  
 - **Additional Data:** Weather (OpenWeatherMap), location features  
 - **Features:**
@@ -30,7 +30,7 @@ Air pollution is a critical global crisis. While existing systems provide an Air
 
 ---
 
-## 🧹 Data Preprocessing
+## Data Preprocessing
 - Missing values handled using median imputation  
 - Removed invalid/outlier values (0, 999, etc.)  
 - Feature engineering for distance-based features  
@@ -38,39 +38,39 @@ Air pollution is a critical global crisis. While existing systems provide an Air
 
 ---
 
-## 📈 Exploratory Data Analysis
+## Exploratory Data Analysis
 - PM2.5 and PM10 are highly correlated  
 - Wind plays a major role in pollution spread  
 - Industrial zones show high SO₂ levels  
 
 ---
 
-## 🏷️ Source Labeling (Rule-Based)
+## Source Labeling (Rule-Based)
 Since real labels are unavailable, rules were used:
 
 - **Industrial:** High SO₂ + near industry  
 - **Vehicular:** High NO₂ + near roads  
 - **Agricultural:** High PM10 + near farmland  
 
-⚠️ *Limitation: Labels are simulated, not real ground truth.*
+*Limitation: Labels are simulated, not real ground truth.*
 
 ---
 
-## 🤖 Model Development
+## Model Development
 Models tested:
 - Random Forest  
 - Decision Tree  
 - XGBoost  
 
-### 📊 Performance
+### Performance
 - Random Forest: 99.14%  
 - XGBoost: **99.19% (Best)**  
 
-✅ Final Model: **XGBoost**
+Final Model: **XGBoost**
 
 ---
 
-## 📊 Model Evaluation
+## Model Evaluation
 
 | Class | Precision | Recall | F1-score |
 |------|----------|--------|----------|
@@ -84,7 +84,7 @@ Models tested:
 
 ---
 
-## 🗺️ Visualization
+## Visualization
 - Heatmaps for PM2.5  
 - Color-coded markers for pollution sources  
 - High-risk zones detection  
@@ -95,7 +95,7 @@ Tools used:
 
 ---
 
-## 💻 Dashboard (Streamlit)
+## Dashboard (Streamlit)
 Features:
 - City/location input  
 - Real-time predictions  
@@ -105,21 +105,21 @@ Features:
 
 ---
 
-## ⚠️ Limitations
+## Limitations
 - Rule-based labeling (not real ground truth)  
 - Poor performance on rare classes  
 - Depends on API response time  
 
 ---
 
-## 🚀 Future Work
+## Future Work
 - Satellite data integration (Sentinel-5P)  
 - Time-series forecasting (LSTM)  
 - Mobile alerts & notifications  
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 ENVIRON_SCAN_PROJECT/
 ├── data/
 │ ├── processed/
@@ -136,7 +136,7 @@ ENVIRON_SCAN_PROJECT/
 
 ---
 
-## ▶️ How to Run
+## How to Run
 
 ### 1. Install dependencies
 ```bash
