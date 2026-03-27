@@ -150,3 +150,11 @@ Incorporation of satellite data for large-scale environmental monitoring
 Enhancement of alert systems with smarter thresholding and automation
 Deployment as a scalable web application for public and government use
 Integration with IoT-based air quality sensors for real-time monitoring
+
+
+                      
+
+
+
+
+
