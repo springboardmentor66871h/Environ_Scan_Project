@@ -283,6 +283,28 @@ Built using Streamlit to create an interactive and user-friendly interface.
 * Heatmap visualization
 * Charts and graphs
 
+### 🔹 Dashboard Overview
+![Dashboard](Image/dashboard.png)
+
+---
+
+### 🔹 Pollution Trends
+![Trends](Image/trends.png)
+
+---
+
+### 🔹 Map Visualization
+![Map](Image/map.png)
+
+---
+
+### 🔹 Source Distribution
+![Sources](Image/sources.png)
+
+---
+
+### 🔹 AI Model Analysis
+![Model](Image/model.png)
 ## Key Outcomes Achieved
 * Successfully predicted pollution sources using ML models
 * Visualized pollution hotspots on maps
