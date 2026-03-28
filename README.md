@@ -291,35 +291,32 @@ Screenshots to include:
 ## 14. Project Structure
 
 AI_Price_Optima/
-│
-├── data/
-│   ├── raw/
-│   │   ├── india_air_pollution_cleaned.csv
-│   │   ├── india_weather_dataset_new.csv
-│   │   └── location.csv
-│   │
-│   └── processed/
-│       └── final_environment_dataset.csv
-│
-├── models/
-│   ├── pollution_source_model.joblib
-│   └── label_encoder.joblib
-│
-├── templates/
-│   └── index.html
-│
-├── app.py
-├── collect_pollution.py
-├── collect_weather.py
-├── combine_datasets.py
-├── extract_location_features.py
-├── map_visualization.py
-├── predict.py
-├── train_model.py
-├── dashboardd.py
-├── pollution_source.py
-│
-└── README.md
+ data/
+  raw/
+       india_air_pollution_cleaned.csv
+       india_weather_dataset_new.csv
+       location.csv
+   
+  processed/
+       final_environment_dataset.csv
+ models/
+    pollution_source_model.joblib
+    label_encoder.joblib
+
+ templates/
+    index.html
+
+ app.py
+ collect_pollution.py
+ collect_weather.py
+ combine_datasets.py
+ extract_location_features.py
+ map_visualization.py
+ predict.py
+ train_model.py
+ dashboardd.py
+ pollution_source.py│
+ README.md
 ## 15. How to Run the Project
 
 Step 1: Install dependencies
