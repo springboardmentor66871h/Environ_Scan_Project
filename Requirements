@@ -1,0 +1,31 @@
+# Core Libraries
+pandas
+numpy
+
+# Visualization
+plotly
+matplotlib
+seaborn
+
+# Machine Learning
+scikit-learn
+xgboost
+
+# Web App
+streamlit
+
+# Geospatial
+folium
+streamlit-folium
+geopandas
+osmnx
+branca
+
+# Utilities
+scipy
+joblib
+python-dateutil
+tqdm
+
+# API Requests
+requests
