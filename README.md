@@ -1,5 +1,4 @@
-EnviroScan: AI-Powered Pollution Source Identification using Geospatial Analytics
-
+EnviroScan – Air Pollution Intelligence Dashboard
 
 Project Overview:
 EnviroScan is an AI-powered system designed to identify and visualize sources of air pollution using environmental data. The system combines pollution data, weather parameters, and location-based features to predict pollution sources and display them through an interactive dashboard.
@@ -50,12 +49,12 @@ Exploratory Data Analysis:
 Source Labeling Methodology:
 Since real-world labeled data was not available, rule-based labeling was applied.
 
-Pollution sources:
+Pollution Sources:
+- Vehicular
+- Industrial
+- Agricultural
+- Burning
 
-.Vehicular
-.Industrial
-.Agricultural
-.Burning
 
 Labeling logic:
 
