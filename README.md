@@ -1,122 +1,156 @@
-# AI_Price_Optima – Environmental Data Collection & Processing
+**EnviroScan Elite Pro**
 
-## Project Overview
-This project collects, processes, and combines environmental data including air pollution, weather, and location-based features to create a final dataset for analysis and modeling.
+**AI-Powered Environmental Intelligence & Pollution Analysis System**
 
-## APIs Used
+ **Description**
 
-1. Air Pollution API  
-   - PM2.5  
-   - PM10  
-   - NO₂  
-   - CO  
-   - SO₂  
-   - O₃  
+EnviroScan Elite Pro is an advanced environmental intelligence platform designed to analyze air quality data and predict probable pollution sources using machine learning. The system integrates air quality, meteorological, and geospatial data to provide meaningful insights into pollution patterns, hotspots, and underlying causes.
 
-2. Weather API  
-   - Temperature  
-   - Humidity  
-   - Wind speed  
+It goes beyond traditional monitoring by combining predictive analytics, interactive visualizations, and real-time alert mechanisms, enabling users to make informed decisions for environmental management and urban planning.
 
-3. OpenStreetMap (OSMnx)  
-   - Roads  
-   - Industrial areas  
-   - Dump sites  
-   - Agricultural land  
+**Objectives**
+Predict probable pollution sources using machine learning models
+Analyze air quality trends across different cities and time periods
+Identify pollution hotspots through geospatial visualization
+Detect anomalies and sudden pollution spikes using AI techniques
+Provide real-time alerts through email and SMS notifications
+Enable data-driven decision-making through interactive dashboards and reports
 
-## Cities / Locations Selected
-Data was collected for selected Indian cities based on latitude and longitude coordinates.
+**Dataset Description**
 
-## Time Range of Data
-Data was collected for the selected time period using API queries.
+The project utilizes a combination of open-source datasets to build a comprehensive environmental analysis system:
 
----
+Air Quality Data: Collected from OpenAQ, including key pollutants such as PM2.5, PM10, NO₂, SO₂, CO, and O₃
+Weather Data: Integrated from OpenWeatherMap, covering temperature, humidity, and wind speed
+Geospatial Data: Derived using OpenStreetMap to capture location-based features such as proximity to roads and urban infrastructure
 
-# Data Collection Pipeline
+The dataset includes multiple cities, temporal attributes (year, month, day, hour), and environmental parameters to enable both spatial and temporal analysis.
 
-### 1. collect_pollution.py
-Fetches pollution data using API requests.
+**Data Preprocessing**
 
-### 2. collect_weather.py
-Fetches weather data.
+To ensure data quality and model reliability, several preprocessing steps were performed:
 
-### 3. extract_location_features.py
-Uses OSMnx to extract geographic features.
+Handling missing values using imputation and removal techniques
+Eliminating duplicate records to maintain dataset integrity
+Converting data types and ensuring consistency across features
+Feature engineering, including time-based variables and distance-based attributes
+Normalization and scaling of selected features to improve model performance
 
-### 4. combine_datasets.py
-Merges pollution, weather, and location datasets.
+These steps helped in creating a clean and structured dataset suitable for analysis and machine learning.
 
----
+**Exploratory Data Analysis (EDA)**
 
-# Air Pollution Source Attribution Using AI
+Exploratory Data Analysis was conducted to understand data patterns and relationships:
 
-## Project Overview
-This project identifies likely sources of air pollution using machine learning.
+Identification of pollution trends across cities and time periods
+Visualization of pollutant distributions using histograms and line charts
+Correlation analysis between pollutants and meteorological parameters
+Detection of peak pollution hours and seasonal variations
+Identification of high-risk zones through preliminary geospatial analysis
 
-### Pollution Sources
-- Vehicular  
-- Industrial  
-- Agricultural  
-- Burning  
-- Natural  
+EDA provided critical insights that guided feature selection and model development.
 
----
+**Source Labeling Methodology**
 
-# Dataset
+Due to the absence of ground-truth labels for pollution sources, a rule-based labeling approach was adopted to simulate source categories.
 
-The project combines:
+Pollution sources were classified into categories such as Vehicular, Industrial, Agricultural, Burning, and Natural
+Labels were assigned based on pollutant concentration thresholds, weather conditions, and contextual environmental factors
+Domain knowledge and logical assumptions were used to design classification rules
 
-- Station spatial data  
-- Weather data  
-- Synthetic pollutant concentrations  
+Assumptions:
 
-Since real datasets do not contain labeled sources, pollutant levels were simulated and rule-based labeling was applied.
+High NO₂ levels indicate vehicular emissions
+Elevated SO₂ suggests industrial activity
+High PM levels with low wind speed indicate pollutant accumulation
 
----
+Limitations:
 
-# Labeling Rules
+Labels are simulated and not derived from real-world ground truth
+Rule-based logic may not capture complex real-world interactions
+Model predictions depend on the quality and assumptions of labeling
 
-| Condition | Source |
-|----------|--------|
-| NO₂ > 80 and Distance_to_Road < 0.5 | Vehicular |
-| SO₂ > 50 | Industrial |
-| PM2.5 > 100 and PM10 > 150 | Agricultural |
-| PM2.5 > 120 | Burning |
-| Otherwise | Natural |
+Despite these limitations, this approach enables supervised learning and provides a practical foundation for pollution source prediction.
 
----
 
-# Week 4 – Model Training
+**Model Development**
 
-Model Used:  
-Random Forest Classifier
+Multiple machine learning models were developed to predict pollution sources based on environmental and spatial features:
 
-### Features
-- PM2.5, PM10, NO2, CO, SO2, O3  
-- Temperature, Humidity  
-- Wind Speed, Wind Direction  
-- Distance to Road, Industry, Dump Site  
+Algorithms Used: Random Forest, Decision Tree, and XGBoost
+Feature Selection: Key features include pollutant concentrations (PM2.5, PM10, NO₂, SO₂, CO, O₃), weather parameters, and engineered spatial/temporal features
+Data Split: Dataset divided into training and testing sets to evaluate model generalization
+Preprocessing: Numerical conversion, handling missing values, and feature alignment
+Hyperparameter Tuning: Optimized using iterative experimentation to improve model accuracy and stability
 
-### Evaluation Metrics
-- Accuracy  
-- Precision  
-- Recall  
-- F1-Score  
+Tree-based ensemble models were chosen due to their ability to handle non-linear relationships and feature interactions effectively.
 
-### Output Files
-- models/pollution_model.pkl  
-- feature_importance.png  
+ 
+ **Model Evaluation**
 
----
+The performance of the models was assessed using standard classification metrics:
 
-# Week 5 – Geospatial Mapping
+Accuracy: Measures overall correctness of predictions
+Precision: Evaluates correctness of predicted pollution sources
+Recall: Measures the ability to identify actual source categories
+F1-Score: Balances precision and recall for robust evaluation
+Confusion Matrix: Provides a detailed breakdown of classification performance across all categories
 
-Tools Used:
-- Folium  
-- HeatMap plugin  
+Interpretation:
+The models demonstrated strong predictive capability in identifying dominant pollution sources, particularly for well-defined patterns such as vehicular and industrial emissions. Minor misclassifications were observed in overlapping categories, which is expected due to the simulated labeling approach.
 
-### Features
-- Pollution heatmap using PM2.5 values  
-- Source-specific markers  
-- High-risk zone highlighting  
-- Interactive map exported as HTML
+**Geospatial Visualization**
+
+Geospatial analysis plays a key role in identifying pollution patterns and high-risk areas:
+
+Tools Used: Folium for interactive maps and spatial visualization
+Heatmaps: Generated using latitude, longitude, and pollutant intensity to highlight pollution hotspots
+Marker Visualization: Color-coded markers represent pollution severity and predicted sources
+Risk Zones: High AQI regions are identified and visualized for better interpretation
+
+These visualizations provide intuitive insights into spatial pollution distribution and support location-based decision-making.
+
+**Dashboard Implementation**
+
+An interactive dashboard was developed using Streamlit to integrate all system functionalities into a single interface:
+
+User Input: Upload datasets or provide manual environmental inputs
+Real-Time Predictions: Display predicted pollution sources with confidence levels
+Data Visualization: Includes trend analysis, bar charts, pie charts, and correlation heatmaps
+Geospatial Maps: Interactive maps with multiple modes (heatmap, risk zones, clustering, multi-layer view)
+City Comparison: Compare multiple cities across key pollution metrics
+3D Visualizations: Surface plots and scatter plots for advanced analysis
+Anomaly Detection: Identifies unusual pollution spikes and root causes
+Alert System: Sends notifications via email and SMS when pollution exceeds critical thresholds
+Report Generation: Export data and analysis in multiple formats (CSV, TXT)
+
+The dashboard ensures a seamless and user-friendly experience for environmental analysis.
+
+**Results and Outputs**
+
+The system successfully delivers meaningful insights through:
+
+Accurate prediction of pollution sources with confidence scores
+Identification of pollution hotspots and high-risk zones
+Detection of anomalies and critical pollution events
+Visualization of temporal and spatial pollution trends
+Comparative analysis across multiple cities
+
+Key outputs include interactive charts, geospatial maps, anomaly reports, and downloadable summaries, making the system suitable for both analysis and decision-making.
+
+**Limitations**
+Pollution source labels are simulated using rule-based logic due to lack of ground truth data
+Model performance depends on the quality and assumptions of the dataset
+Limited real-time integration; analysis is primarily based on static or uploaded datasets
+Complex environmental interactions may not be fully captured by current models
+
+These limitations highlight opportunities for further improvement and real-world validation.
+
+**Future Enhancements**
+
+-Integration with real-time APIs for continuous data streaming
+-Use of advanced deep learning models for improved prediction accuracy
+-Incorporation of satellite data for large-scale environmental monitoring
+-Enhancement of alert systems with smarter thresholding and automation
+-Deployment as a scalable web application for public and government use
+-Integration with IoT-based air quality sensors for real-time monitoring
