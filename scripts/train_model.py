@@ -7,22 +7,39 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 
+# ------------------------
 # Step 1: Load dataset
-df = pd.read_csv("data/processed/final_labeled_dataset.csv")
+# ------------------------
+df = pd.read_csv("data/processed/final_labeled_with_weather.csv")
 
-# Drop unnecessary columns
-df = df.drop(columns=["StationId", "StationName", "City", "State", "Status"])
+print("Original Shape:", df.shape)
 
-# Remove rows with missing values
+# ------------------------
+# Step 2: Remove non-numeric columns
+# ------------------------
+df = df.drop(columns=["timestamp"], errors='ignore')
+
+# (Optional but recommended)
+df = df.drop(columns=["latitude", "longitude"], errors='ignore')
+
+# ------------------------
+# Step 3: Remove missing values
+# ------------------------
 df = df.dropna()
 
-# Target variable
+print("After Cleaning Shape:", df.shape)
+
+# ------------------------
+# Step 4: Define features & target
+# ------------------------
 target = "pollution_source"
 
 X = df.drop(columns=[target])
 y = df[target]
 
-# Train-test split
+# ------------------------
+# Step 5: Train-test split
+# ------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
@@ -48,10 +65,10 @@ grid.fit(X_train, y_train)
 
 best_model = grid.best_estimator_
 
-print("Best Parameters:", grid.best_params_)
+print("\nBest Parameters:", grid.best_params_)
 
 # ------------------------
-# Model Evaluation
+# Step 6: Model Evaluation
 # ------------------------
 y_pred = best_model.predict(X_test)
 
@@ -62,23 +79,25 @@ print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
 
 # ------------------------
-# Feature Importance
+# Step 7: Feature Importance
 # ------------------------
 importance = best_model.feature_importances_
 
 features = pd.Series(importance, index=X.columns)
 features = features.sort_values(ascending=False)
 
-plt.figure(figsize=(10,5))
+plt.figure(figsize=(10, 5))
 features.head(10).plot(kind="bar")
 plt.title("Top Features for Pollution Prediction")
 plt.tight_layout()
 
 plt.savefig("data/processed/feature_importance.png")
 
+print("\nFeature importance chart saved!")
+
 # ------------------------
-# Save Model
+# Step 8: Save Model
 # ------------------------
 joblib.dump(best_model, "models/pollution_model.pkl")
 
-print("\nModel saved successfully!")
+print("\n✅ Model saved successfully!")

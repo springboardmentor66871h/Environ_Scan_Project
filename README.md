@@ -1,122 +1,183 @@
-# AI_Price_Optima – Environmental Data Collection & Processing
+EnviroScan: AI-Powered Pollution Source Identification using Geospatial Analytics
 
-## Project Overview
-This project collects, processes, and combines environmental data including air pollution, weather, and location-based features to create a final dataset for analysis and modeling.
 
-## APIs Used
+Project Overview:
+EnviroScan is an AI-powered system designed to identify and visualize sources of air pollution using environmental data. The system combines pollution data, weather parameters, and location-based features to predict pollution sources and display them through an interactive dashboard.
 
-1. Air Pollution API  
-   - PM2.5  
-   - PM10  
-   - NO₂  
-   - CO  
-   - SO₂  
-   - O₃  
 
-2. Weather API  
-   - Temperature  
-   - Humidity  
-   - Wind speed  
+Problem Statement:
+Air pollution monitoring systems provide pollutant values but do not clearly identify the source of pollution such as vehicular or industrial. This makes it difficult to take proper actions.
+This project aims to solve this problem by predicting pollution sources using machine learning and visualizing them geographically.
 
-3. OpenStreetMap (OSMnx)  
-   - Roads  
-   - Industrial areas  
-   - Dump sites  
-   - Agricultural land  
 
-## Cities / Locations Selected
-Data was collected for selected Indian cities based on latitude and longitude coordinates.
+Objectives:
 
-## Time Range of Data
-Data was collected for the selected time period using API queries.
+.Predict pollution sources using machine learning
+.Visualize pollution hotspots on maps
+.Provide insights using environmental data
+.Enable location-based filtering in dashboard
 
----
 
-# Data Collection Pipeline
+Dataset Description:
+Due to limitations in real-time API access, a Kaggle dataset (static data) was used.
 
-### 1. collect_pollution.py
-Fetches pollution data using API requests.
+Data includes:
 
-### 2. collect_weather.py
-Fetches weather data.
+.Pollutants: PM10, NO2, SO2, CO, O3
+.Weather: temperature, humidity, wind speed
+.Location features: distance to road, industry, farmland, dump sites
 
-### 3. extract_location_features.py
-Uses OSMnx to extract geographic features.
+Locations:
+City names were obtained using latitude and longitude through reverse geocoding.
 
-### 4. combine_datasets.py
-Merges pollution, weather, and location datasets.
 
----
+Data Preprocessing:
 
-# Air Pollution Source Attribution Using AI
+.Removed missing values
+.Converted pollutant rows into columns using pivot operation
+.Merged pollution, weather, and location datasets
+.Filled missing values with 0
+.Added location column using latitude and longitude
 
-## Project Overview
-This project identifies likely sources of air pollution using machine learning.
 
-### Pollution Sources
-- Vehicular  
-- Industrial  
-- Agricultural  
-- Burning  
-- Natural  
+Exploratory Data Analysis:
 
----
+.Observed pollution distribution
+.Identified dominant pollutant values
+.Noticed imbalance in pollution source categories
 
-# Dataset
 
-The project combines:
+Source Labeling Methodology:
+Since real-world labeled data was not available, rule-based labeling was applied.
 
-- Station spatial data  
-- Weather data  
-- Synthetic pollutant concentrations  
+Pollution sources:
 
-Since real datasets do not contain labeled sources, pollutant levels were simulated and rule-based labeling was applied.
+.Vehicular
+.Industrial
+.Agricultural
+.Burning
 
----
+Labeling logic:
 
-# Labeling Rules
+.High NO2 and near road → Vehicular
+.High SO2 or near industry → Industrial
+.High PM10 → Agricultural
+.Moderate PM10 or near dump → Burning
 
-| Condition | Source |
-|----------|--------|
-| NO₂ > 80 and Distance_to_Road < 0.5 | Vehicular |
-| SO₂ > 50 | Industrial |
-| PM2.5 > 100 and PM10 > 150 | Agricultural |
-| PM2.5 > 120 | Burning |
-| Otherwise | Natural |
+Note: Labels are simulated because real ground truth data is not available.
 
----
 
-# Week 4 – Model Training
+Model Development
+Models used:
 
-Model Used:  
-Random Forest Classifier
+.Decision Tree
+.Random Forest (final model)
 
-### Features
-- PM2.5, PM10, NO2, CO, SO2, O3  
-- Temperature, Humidity  
-- Wind Speed, Wind Direction  
-- Distance to Road, Industry, Dump Site  
+Approach:
 
-### Evaluation Metrics
-- Accuracy  
-- Precision  
-- Recall  
-- F1-Score  
+.Train-test split (80:20)
+.Hyperparameter tuning using GridSearch
 
-### Output Files
-- models/pollution_model.pkl  
-- feature_importance.png  
 
----
+Model Evaluation:
+Metrics used:
 
-# Week 5 – Geospatial Mapping
+.Accuracy
+.Precision
+.Recall
+.F1-score
 
-Tools Used:
-- Folium  
-- HeatMap plugin  
+The model achieved high accuracy because the labels were rule-based and patterns were clearly defined.
 
-### Features
-- Pollution heatmap using PM2.5 values  
-- Source-specific markers  
-- High-risk zone highlighting  
-- Interactive map exported as HTML
+
+Feature Importance:
+Random Forest was used to identify important features affecting pollution prediction.
+
+
+Geospatial Visualization:
+Tools used:
+
+.Folium
+.HeatMap
+
+Features:
+
+.Pollution heatmap based on PM10
+.Source-specific markers
+.High-risk zones
+.Interactive map
+
+
+Dashboard Implementation
+Built using Streamlit.
+
+Features:
+
+.Search by city/location
+.Pollution source prediction
+.Heatmap visualization
+.Charts and trends
+.Dataset download option
+.Voice-based AQI output using text-to-speech
+
+
+Results and Outputs
+
+.Successfully predicted pollution sources
+.Visualized pollution hotspots
+.Built an interactive dashboard
+
+
+Limitations
+
+.No real-time API integration
+.Rule-based labeling instead of real data
+.Static dataset used
+
+
+Future Enhancements:
+
+.Integrate real-time APIs
+.Use advanced machine learning models
+.Improve labeling using real data
+.Enhance location accuracy
+
+
+Project Structure:
+
+data/
+raw/
+processed/
+
+scripts/
+models/
+dashboard/
+README
+
+
+How to Run the Project:
+
+Install dependencies:
+pip install -r requirements.txt
+
+Run model:
+python scripts/train_model.py
+
+Run dashboard:
+streamlit run dashboard/app.py
+
+
+Technologies Used:
+
+.Python
+.Pandas
+.NumPy
+.Scikit-learn
+.Folium
+.Streamlit
+.Geopy
+.pyttsx3
+
+
+Conclusion:
+EnviroScan shows how environmental data and machine learning can be used together to identify pollution sources and provide useful insights through visualization.
