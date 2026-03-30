@@ -16,3 +16,6 @@ cache/
 
 #models
 /models
+
+/visualisation
+/node_modules
