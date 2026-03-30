@@ -9,12 +9,13 @@ EnviroScan Elite Pro is an advanced environmental intelligence platform designed
 It goes beyond traditional monitoring by combining predictive analytics, interactive visualizations, and real-time alert mechanisms, enabling users to make informed decisions for environmental management and urban planning.
 
 **Objectives**
-Predict probable pollution sources using machine learning models
-Analyze air quality trends across different cities and time periods
-Identify pollution hotspots through geospatial visualization
-Detect anomalies and sudden pollution spikes using AI techniques
-Provide real-time alerts through email and SMS notifications
-Enable data-driven decision-making through interactive dashboards and reports
+
+-Predict probable pollution sources using machine learning models
+-Analyze air quality trends across different cities and time periods
+-Identify pollution hotspots through geospatial visualization
+-Detect anomalies and sudden pollution spikes using AI techniques
+-Provide real-time alerts through email and SMS notifications
+-Enable data-driven decision-making through interactive dashboards and reports
 
 **Dataset Description**
 
@@ -30,11 +31,11 @@ The dataset includes multiple cities, temporal attributes (year, month, day, hou
 
 To ensure data quality and model reliability, several preprocessing steps were performed:
 
-Handling missing values using imputation and removal techniques
-Eliminating duplicate records to maintain dataset integrity
-Converting data types and ensuring consistency across features
-Feature engineering, including time-based variables and distance-based attributes
-Normalization and scaling of selected features to improve model performance
+-Handling missing values using imputation and removal techniques
+-Eliminating duplicate records to maintain dataset integrity
+-Converting data types and ensuring consistency across features
+-Feature engineering, including time-based variables and distance-based attributes
+-Normalization and scaling of selected features to improve model performance
 
 These steps helped in creating a clean and structured dataset suitable for analysis and machine learning.
 
@@ -42,11 +43,11 @@ These steps helped in creating a clean and structured dataset suitable for analy
 
 Exploratory Data Analysis was conducted to understand data patterns and relationships:
 
-Identification of pollution trends across cities and time periods
-Visualization of pollutant distributions using histograms and line charts
-Correlation analysis between pollutants and meteorological parameters
-Detection of peak pollution hours and seasonal variations
-Identification of high-risk zones through preliminary geospatial analysis
+-Identification of pollution trends across cities and time periods
+-Visualization of pollutant distributions using histograms and line charts
+-Correlation analysis between pollutants and meteorological parameters
+-Detection of peak pollution hours and seasonal variations
+-Identification of high-risk zones through preliminary geospatial analysis
 
 EDA provided critical insights that guided feature selection and model development.
 
@@ -130,19 +131,20 @@ The dashboard ensures a seamless and user-friendly experience for environmental 
 
 The system successfully delivers meaningful insights through:
 
-Accurate prediction of pollution sources with confidence scores
-Identification of pollution hotspots and high-risk zones
-Detection of anomalies and critical pollution events
-Visualization of temporal and spatial pollution trends
-Comparative analysis across multiple cities
+-Accurate prediction of pollution sources with confidence scores
+-Identification of pollution hotspots and high-risk zones
+-Detection of anomalies and critical pollution events
+-Visualization of temporal and spatial pollution trends
+-Comparative analysis across multiple cities
 
 Key outputs include interactive charts, geospatial maps, anomaly reports, and downloadable summaries, making the system suitable for both analysis and decision-making.
 
 **Limitations**
-Pollution source labels are simulated using rule-based logic due to lack of ground truth data
-Model performance depends on the quality and assumptions of the dataset
-Limited real-time integration; analysis is primarily based on static or uploaded datasets
-Complex environmental interactions may not be fully captured by current models
+
+-Pollution source labels are simulated using rule-based logic due to lack of ground truth data
+-Model performance depends on the quality and assumptions of the dataset
+-Limited real-time integration; analysis is primarily based on static or uploaded datasets
+-Complex environmental interactions may not be fully captured by current models
 
 These limitations highlight opportunities for further improvement and real-world validation.
 
