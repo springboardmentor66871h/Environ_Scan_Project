@@ -156,3 +156,53 @@ These limitations highlight opportunities for further improvement and real-world
 -Enhancement of alert systems with smarter thresholding and automation
 -Deployment as a scalable web application for public and government use
 -Integration with IoT-based air quality sensors for real-time monitoring
+
+
+**How to Run the Project**
+
+1. Clone the Repository
+    git clone <your-repo-link>
+    cd <your-project-folder>
+    
+2. Install Dependencies
+
+     pip install -r requirements.txt
+   
+3. Run the Streamlit Dashboard
+      streamlit run app.py
+
+       (Replace app.py with your actual dashboard file name if different)
+
+4. Open in Browser
+     The app will automatically open at:
+     http://localhost:8501
+
+5. Upload Dataset
+       Use the sidebar to upload your CSV dataset
+   
+ **Required columns:**
+ 
+PM2.5, PM10, NO2, SO2, CO, O3,
+temperature, humidity, wind_speed,
+latitude, longitude, city_name,
+year, month, day, hour
+
+ **Optional Setup (Alerts)**
+ 
+Email Alerts (Gmail SMTP)
+Enable 2-Step Verification
+Generate App Password
+Enter credentials in dashboard
+SMS Alerts (Fast2SMS)
+Create account on Fast2SMS
+Copy API key
+Paste in dashboard settings
+
+ **Output**
+AI-based pollution source prediction
+Interactive charts & maps
+Anomaly detection insights
+Downloadable reports (CSV / TXT)
+
+
+**“The system can be deployed locally using Streamlit with minimal setup and dependency installation.”**
