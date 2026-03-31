@@ -171,7 +171,7 @@ These limitations highlight opportunities for further improvement and real-world
 3. Run the Streamlit Dashboard
       streamlit run app.py
 
-       (Replace app.py with your actual dashboard file name if different)
+      -Replace app.py with your actual dashboard file name if different
 
 4. Open in Browser
      The app will automatically open at:
