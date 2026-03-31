@@ -1,193 +1,175 @@
-import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
+import joblib
 import folium
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
-from datetime import datetime
-import joblib
 import pyttsx3
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="EnviroScan Dashboard", layout="wide")
-st.title("EnviroScan – Air Pollution Intelligence Dashboard")
-
-# -------------------------
-# SIDEBAR
-# -------------------------
-st.sidebar.title("Navigate")
-page = st.sidebar.radio("Go to", ["Dashboard", "Pie Chart", "Map", "History", "Downloads"])
-
-# 🔍 SEARCH BY CITY
-search_query = st.sidebar.text_input("Search City (e.g., Delhi, Chennai)")
-
-# -------------------------
-# LOAD DATA
-# -------------------------
+# ------------------------
+# Load Data
+# ------------------------
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/processed/final_labeled_with_weather.csv")
-    df = df.dropna(subset=["latitude", "longitude"])
-    return df
+    return pd.read_csv("data/processed/final_labeled_with_weather.csv")
 
 df = load_data()
 
-# -------------------------
-# APPLY SEARCH FILTER
-# -------------------------
-if search_query:
-    df = df[df["location"].str.contains(search_query, case=False, na=False)]
+# ------------------------
+# Load Model
+# ------------------------
+model = joblib.load("models/pollution_model.pkl")
+feature_columns = joblib.load("models/feature_columns.pkl")
+
+# ------------------------
+# Sidebar
+# ------------------------
+st.sidebar.title("Navigation")
+
+page = st.sidebar.radio("Go to", [
+    "Dashboard", "Pie Chart", "Map", "History", "Downloads"
+])
+
+# ------------------------
+# Search City
+# ------------------------
+city = st.sidebar.text_input("Search City (e.g., Delhi, Chennai)")
+
+if city:
+    df = df[df["location"].str.contains(city, case=False, na=False)]
 
 st.sidebar.write("Available Cities:", df["location"].dropna().unique())
-st.sidebar.write(f"Filtered Records: {len(df)}")
 
-# -------------------------
-# LOAD MODEL
-# -------------------------
-@st.cache_resource
-def load_model():
-    return joblib.load("models/pollution_model.pkl")
-
-model = load_model()
-
-# -------------------------
-# AQI FUNCTION
-# -------------------------
-def get_aqi_info(aqi):
-    if aqi <= 50:
-        return "Good", "Air quality is satisfactory."
-    elif aqi <= 100:
-        return "Moderate", "Acceptable air quality."
-    elif aqi <= 150:
-        return "Unhealthy for Sensitive", "Sensitive groups should be careful."
-    elif aqi <= 200:
-        return "Unhealthy", "Everyone may feel effects."
-    elif aqi <= 300:
-        return "Very Unhealthy", "Health warnings."
-    else:
-        return "Hazardous", "Serious health effects."
-
-# =====================================================
-# DASHBOARD
-# =====================================================
+# ------------------------
+# DASHBOARD (PREMIUM UI)
+# ------------------------
 if page == "Dashboard":
 
-    total_records = len(df)
-    avg_pm10 = round(df["PM10"].mean(), 2) if len(df) > 0 else 0
-    pollution_sources = df["pollution_source"].nunique()
+    st.markdown(
+        "<h1 style='text-align: center;'>EnviroScan – Air Pollution Intelligence Dashboard</h1>",
+        unsafe_allow_html=True
+    )
 
+    # Horizontal cards
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Records", total_records)
-    col2.metric("Average PM10", avg_pm10)
-    col3.metric("Pollution Sources", pollution_sources)
 
-    st.divider()
+    with col1:
+        st.markdown(f"""
+        <div style='background-color:#1f77b4;padding:20px;border-radius:10px;text-align:center'>
+            <h3>Total Records</h3>
+            <h2>{len(df)}</h2>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader("Air Quality Index")
+    with col2:
+        st.markdown(f"""
+        <div style='background-color:#2ca02c;padding:20px;border-radius:10px;text-align:center'>
+            <h3>Average PM10</h3>
+            <h2>{round(df["PM10"].mean(), 2)}</h2>
+        </div>
+        """, unsafe_allow_html=True)
 
-    if len(df) > 0:
-        aqi_value = int(df["PM10"].mean())
-        status, message = get_aqi_info(aqi_value)
-        st.success(f"AQI: {aqi_value} — {status}")
-        st.info(message)
+    with col3:
+        st.markdown(f"""
+        <div style='background-color:#ff7f0e;padding:20px;border-radius:10px;text-align:center'>
+            <h3>Pollution Sources</h3>
+            <h2>{df["pollution_source"].nunique()}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # AQI Section
+    avg_pm10 = df["PM10"].mean()
+
+    if avg_pm10 < 50:
+        status = "Good"
+        color = "#2ecc71"
+        message = "Air quality is good."
+    elif avg_pm10 < 100:
+        status = "Moderate"
+        color = "#f1c40f"
+        message = "Air quality is moderate."
     else:
-        st.warning("No data available")
+        status = "Unhealthy for Sensitive"
+        color = "#e74c3c"
+        message = "Sensitive groups should be careful."
 
-    def speak(text):
+    st.markdown(f"""
+    <div style='background-color:{color};padding:20px;border-radius:10px'>
+        <h3>Air Quality Index</h3>
+        <h2>AQI: {round(avg_pm10)} — {status}</h2>
+        <p>{message}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Voice Feature (FIXED KEY)
+    if st.button("🔊 Speak AQI", key="voice_btn"):
         engine = pyttsx3.init()
-        engine.say(text)
+        engine.say(f"The air quality is {status}")
         engine.runAndWait()
 
-    if st.button("Speak AQI") and len(df) > 0:
-        speak(f"Air quality is {status}. {message}")
-
-    # Prediction
-    try:
-        feature_cols = [
-            "CO", "NO2", "O3", "PM10", "SO2",
-            "temperature", "humidity", "wind_speed",
-            "distance_to_road_m", "distance_to_industry_m",
-            "distance_to_farmland_m", "distance_to_dump_m"
-        ]
-
-        if len(df) > 0:
-            sample = df.iloc[0]
-            features = [sample.get(col, 0) for col in feature_cols]
-            prediction = model.predict([features])[0]
-
-            st.subheader("AI Prediction")
-            st.success(f"Predicted Source: {prediction}")
-
-    except Exception as e:
-        st.error(f"Prediction error: {e}")
-
-# =====================================================
-# PIE CHART
-# =====================================================
+# ------------------------
+# PIE CHART (REAL PIE)
+# ------------------------
 elif page == "Pie Chart":
-    st.header("Pollution Source Distribution")
+    st.title("Pollution Source Distribution")
 
-    if len(df) > 0:
-        source_counts = df["pollution_source"].value_counts()
+    pie = df["pollution_source"].value_counts()
 
-        fig, ax = plt.subplots()
-        ax.pie(source_counts, labels=source_counts.index, autopct="%1.1f%%")
-        ax.axis("equal")
+    fig, ax = plt.subplots()
+    ax.pie(pie, labels=pie.index, autopct='%1.1f%%')
+    ax.set_title("Pollution Source Share")
 
-        st.pyplot(fig)
-    else:
-        st.warning("No data available")
+    st.pyplot(fig)
 
-# =====================================================
-# MAP
-# =====================================================
+# ------------------------
+# MAP (HEATMAP)
+# ------------------------
 elif page == "Map":
-    st.header("Pollution Heatmap")
+    st.title("Pollution Heatmap")
 
-    if len(df) > 0:
-        center_lat = df["latitude"].mean()
-        center_lon = df["longitude"].mean()
+    m = folium.Map(
+        location=[df["latitude"].mean(), df["longitude"].mean()],
+        zoom_start=5
+    )
 
-        m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
+    heat_data = [
+        [row["latitude"], row["longitude"], row["PM10"]]
+        for _, row in df.iterrows()
+    ]
 
-        HeatMap(df[["latitude", "longitude", "PM10"]].values.tolist()).add_to(m)
+    HeatMap(heat_data).add_to(m)
 
-        for _, row in df.iterrows():
-            folium.CircleMarker(
-                location=[row["latitude"], row["longitude"]],
-                radius=6,
-                popup=f"{row['location']} | {row['pollution_source']} | PM10: {row['PM10']}"
-            ).add_to(m)
+    st_folium(m, width=700)
 
-        st_folium(m, width=1100, height=500)
-    else:
-        st.warning("No data available")
-
-# =====================================================
+# ------------------------
 # HISTORY
-# =====================================================
+# ------------------------
 elif page == "History":
-    st.header("Pollution Trend")
+    st.title("Dataset Preview")
+    st.dataframe(df.head(100))
 
-    if len(df) > 0:
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(df["PM10"].reset_index(drop=True))
-        ax.set_title("PM10 Trend")
-
-        st.pyplot(fig)
-    else:
-        st.warning("No data available")
-
-# =====================================================
+# ------------------------
 # DOWNLOAD
-# =====================================================
+# ------------------------
 elif page == "Downloads":
-    st.header("Download Data")
+    st.title("Download Dataset")
 
-    if len(df) > 0:
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button("Download Dataset", csv, "pollution_data.csv")
-    else:
-        st.warning("No data available")
+    st.download_button(
+        "Download CSV",
+        df.to_csv(index=False),
+        "pollution_data.csv"
+    )
 
-# FOOTER
-st.caption(f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+# ------------------------
+# PREDICTION
+# ------------------------
+try:
+    X_input = df[feature_columns]
+    df["Predicted"] = model.predict(X_input)
+except Exception as e:
+    st.error(f"Prediction error: {e}")

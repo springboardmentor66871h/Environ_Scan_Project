@@ -8,51 +8,47 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 
 # ------------------------
-# Step 1: Load dataset
+# Load dataset
 # ------------------------
 df = pd.read_csv("data/processed/final_labeled_with_weather.csv")
 
 print("Original Shape:", df.shape)
 
 # ------------------------
-# Step 2: Remove non-numeric columns
-# ------------------------
-df = df.drop(columns=["timestamp"], errors='ignore')
-
-# (Optional but recommended)
-df = df.drop(columns=["latitude", "longitude"], errors='ignore')
-
-# ------------------------
-# Step 3: Remove missing values
+# Cleaning
 # ------------------------
 df = df.dropna()
+
+# Drop non-numeric columns
+df = df.drop(columns=["timestamp", "location"], errors="ignore")
 
 print("After Cleaning Shape:", df.shape)
 
 # ------------------------
-# Step 4: Define features & target
+# Features & Target
 # ------------------------
 target = "pollution_source"
 
 X = df.drop(columns=[target])
 y = df[target]
 
+# SAVE FEATURE COLUMNS (IMPORTANT FIX)
+feature_columns = X.columns.tolist()
+joblib.dump(feature_columns, "models/feature_columns.pkl")
+
 # ------------------------
-# Step 5: Train-test split
+# Train-test split
 # ------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
 # ------------------------
-# Model 1: Decision Tree
+# Models
 # ------------------------
 dt = DecisionTreeClassifier(random_state=42)
 dt.fit(X_train, y_train)
 
-# ------------------------
-# Model 2: Random Forest + Hyperparameter tuning
-# ------------------------
 rf = RandomForestClassifier(random_state=42)
 
 param_grid = {
@@ -68,7 +64,7 @@ best_model = grid.best_estimator_
 print("\nBest Parameters:", grid.best_params_)
 
 # ------------------------
-# Step 6: Model Evaluation
+# Evaluation
 # ------------------------
 y_pred = best_model.predict(X_test)
 
@@ -79,7 +75,7 @@ print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
 
 # ------------------------
-# Step 7: Feature Importance
+# Feature Importance
 # ------------------------
 importance = best_model.feature_importances_
 
@@ -96,8 +92,8 @@ plt.savefig("data/processed/feature_importance.png")
 print("\nFeature importance chart saved!")
 
 # ------------------------
-# Step 8: Save Model
+# Save model
 # ------------------------
 joblib.dump(best_model, "models/pollution_model.pkl")
 
-print("\n✅ Model saved successfully!")
+print("\nModel saved successfully!")
