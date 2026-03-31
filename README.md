@@ -180,3 +180,18 @@ Technologies Used:
 
 Conclusion:
 EnviroScan shows how environmental data and machine learning can be used together to identify pollution sources and provide useful insights through visualization.
+
+
+Project Screenshots:
+
+Dashboard Overview
+![Dashboard](assets/dashboard.png)
+
+Pollution Distribution (Pie Chart)
+![Pie Chart](assets/pie_chart.png)
+
+Geospatial Heatmap
+![Heatmap](assets/heatmap.png)
+
+Voice-enabled AQI Feature
+![Voice](assets/voice.png)
