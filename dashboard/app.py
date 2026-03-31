@@ -7,33 +7,23 @@ from streamlit_folium import st_folium
 import pyttsx3
 import matplotlib.pyplot as plt
 
-# ------------------------
-# Load Data
-# ------------------------
+st.set_page_config(page_title="EnviroScan Dashboard", layout="wide")
+
 @st.cache_data
 def load_data():
     return pd.read_csv("data/processed/final_labeled_with_weather.csv")
 
 df = load_data()
 
-# ------------------------
-# Load Model
-# ------------------------
 model = joblib.load("models/pollution_model.pkl")
 feature_columns = joblib.load("models/feature_columns.pkl")
 
-# ------------------------
-# Sidebar
-# ------------------------
 st.sidebar.title("Navigation")
 
 page = st.sidebar.radio("Go to", [
     "Dashboard", "Pie Chart", "Map", "History", "Downloads"
 ])
 
-# ------------------------
-# Search City
-# ------------------------
 city = st.sidebar.text_input("Search City (e.g., Delhi, Chennai)")
 
 if city:
@@ -41,9 +31,6 @@ if city:
 
 st.sidebar.write("Available Cities:", df["location"].dropna().unique())
 
-# ------------------------
-# DASHBOARD (PREMIUM UI)
-# ------------------------
 if page == "Dashboard":
 
     st.markdown(
@@ -51,7 +38,6 @@ if page == "Dashboard":
         unsafe_allow_html=True
     )
 
-    # Horizontal cards
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -78,9 +64,6 @@ if page == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # AQI Section
     avg_pm10 = df["PM10"].mean()
 
     if avg_pm10 < 50:
@@ -104,17 +87,11 @@ if page == "Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Voice Feature (FIXED KEY)
     if st.button("🔊 Speak AQI", key="voice_btn"):
         engine = pyttsx3.init()
         engine.say(f"The air quality is {status}")
         engine.runAndWait()
 
-# ------------------------
-# PIE CHART (REAL PIE)
-# ------------------------
 elif page == "Pie Chart":
     st.title("Pollution Source Distribution")
 
@@ -122,13 +99,8 @@ elif page == "Pie Chart":
 
     fig, ax = plt.subplots()
     ax.pie(pie, labels=pie.index, autopct='%1.1f%%')
-    ax.set_title("Pollution Source Share")
-
     st.pyplot(fig)
 
-# ------------------------
-# MAP (HEATMAP)
-# ------------------------
 elif page == "Map":
     st.title("Pollution Heatmap")
 
@@ -144,18 +116,12 @@ elif page == "Map":
 
     HeatMap(heat_data).add_to(m)
 
-    st_folium(m, width=700)
+    st_folium(m, width=1000, height=500)
 
-# ------------------------
-# HISTORY
-# ------------------------
 elif page == "History":
     st.title("Dataset Preview")
     st.dataframe(df.head(100))
 
-# ------------------------
-# DOWNLOAD
-# ------------------------
 elif page == "Downloads":
     st.title("Download Dataset")
 
@@ -165,9 +131,6 @@ elif page == "Downloads":
         "pollution_data.csv"
     )
 
-# ------------------------
-# PREDICTION
-# ------------------------
 try:
     X_input = df[feature_columns]
     df["Predicted"] = model.predict(X_input)
