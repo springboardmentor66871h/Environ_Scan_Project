@@ -7,35 +7,48 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 
-# Step 1: Load dataset
-df = pd.read_csv("data/processed/final_labeled_dataset.csv")
+# ------------------------
+# Load dataset
+# ------------------------
+df = pd.read_csv("data/processed/final_labeled_with_weather.csv")
 
-# Drop unnecessary columns
-df = df.drop(columns=["StationId", "StationName", "City", "State", "Status"])
+print("Original Shape:", df.shape)
 
-# Remove rows with missing values
+# ------------------------
+# Cleaning
+# ------------------------
 df = df.dropna()
 
-# Target variable
+# Drop non-numeric columns
+df = df.drop(columns=["timestamp", "location"], errors="ignore")
+
+print("After Cleaning Shape:", df.shape)
+
+# ------------------------
+# Features & Target
+# ------------------------
 target = "pollution_source"
 
 X = df.drop(columns=[target])
 y = df[target]
 
+# SAVE FEATURE COLUMNS (IMPORTANT FIX)
+feature_columns = X.columns.tolist()
+joblib.dump(feature_columns, "models/feature_columns.pkl")
+
+# ------------------------
 # Train-test split
+# ------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
 # ------------------------
-# Model 1: Decision Tree
+# Models
 # ------------------------
 dt = DecisionTreeClassifier(random_state=42)
 dt.fit(X_train, y_train)
 
-# ------------------------
-# Model 2: Random Forest + Hyperparameter tuning
-# ------------------------
 rf = RandomForestClassifier(random_state=42)
 
 param_grid = {
@@ -48,10 +61,10 @@ grid.fit(X_train, y_train)
 
 best_model = grid.best_estimator_
 
-print("Best Parameters:", grid.best_params_)
+print("\nBest Parameters:", grid.best_params_)
 
 # ------------------------
-# Model Evaluation
+# Evaluation
 # ------------------------
 y_pred = best_model.predict(X_test)
 
@@ -69,15 +82,17 @@ importance = best_model.feature_importances_
 features = pd.Series(importance, index=X.columns)
 features = features.sort_values(ascending=False)
 
-plt.figure(figsize=(10,5))
+plt.figure(figsize=(10, 5))
 features.head(10).plot(kind="bar")
 plt.title("Top Features for Pollution Prediction")
 plt.tight_layout()
 
 plt.savefig("data/processed/feature_importance.png")
 
+print("\nFeature importance chart saved!")
+
 # ------------------------
-# Save Model
+# Save model
 # ------------------------
 joblib.dump(best_model, "models/pollution_model.pkl")
 
