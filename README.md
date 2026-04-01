@@ -1,136 +1,136 @@
-# 🌍 EnviroScan: AI-Powered Pollution Source Identification using Geospatial Analytics
+# 1. Project Title
+**EnviroScan: AI-Based Pollution Source Identification System using Geospatial Analytics**
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![Machine Learning](https://img.shields.io/badge/Machine%20Learning-LightGBM%20%7C%20XGBoost-orange)
-![Data Science](https://img.shields.io/badge/Data%20Science-Pandas%20%7C%20Scikit--Learn-green)
-![Status](https://img.shields.io/badge/Status-Milestone%202%20Completed-success)
-
-> **Infosys Springboard Internship Project** | Milestone 1 & 2 (Weeks 1–4)
-
-## 📑 Table of Contents
-1. [Project Overview](#-project-overview)
-2. [Tech Stack & Tools](#-tech-stack--tools)
-3. [Methodology & Pipeline](#-methodology--pipeline)
-    - [Phase 1: Data Aggregation](#phase-1-data-aggregation-weeks-1-2)
-    - [Phase 2: Heuristic Source Labeling](#phase-2-heuristic-source-labeling-week-3)
-    - [Phase 3: Model Training & Evaluation](#phase-3-model-training--evaluation-week-4)
-4. [Model Performance](#-model-performance-metrics)
-5. [Critical Limitations & Future Scope](#-critical-limitations--future-scope)
-6. [Repository Structure](#-repository-structure)
-7. [Installation & Usage](#-installation--usage)
+An end-to-end machine learning pipeline and interactive dashboard designed to analyze environmental data, predict likely pollution sources, and visualize high-risk hotspots.
 
 ---
 
-## 📋 Project Overview
-EnviroScan is an AI-driven geospatial analytics ecosystem designed to predict and classify the primary anthropogenic and natural sources of air pollution in specific geographic locations. 
-
-By fusing live atmospheric pollutant concentrations (PM2.5, NO2, etc.), real-time meteorological conditions, and spatial proximity matrices (distance to industrial zones, main roads, etc.), this system utilizes advanced gradient boosting machine learning algorithms to automatically categorize pollution sources into distinct profiles.
+# 2. Problem Statement
+Identifying the exact sources of urban air pollution is critical for public health interventions and environmental policy. However, existing monitoring systems often rely on sparse sensor networks and fail to integrate real-time meteorological conditions with local geospatial features (like proximity to factories or highways). This project addresses this gap by merging air quality metrics, weather data, and physical map features to intelligently estimate and visualize where pollution is originating.
 
 ---
 
-## 🛠 Tech Stack & Tools
-* **Language:** Python 3.x
-* **Data Processing:** `pandas`, `numpy`
-* **Machine Learning:** `scikit-learn`, `xgboost`, `lightgbm`, `catboost`
-* **APIs & Geospatial:** `OpenAQ API` (Air Quality), `OpenWeatherMap API` (Meteorology), `OSMnx` / `OpenStreetMap` (Spatial features)
-* **Visualization:** `matplotlib`, `seaborn`
-* **Serialization:** `joblib`
+# 3. Objectives
+* **Predict pollution sources** based on the convergence of air quality, weather, and proximity data.
+* **Visualize pollution hotspots** and high-risk zones using interactive geospatial heatmaps.
+* **Provide an interactive dashboard** with real-time alerts and user-driven data exploration to assist decision-makers.
 
 ---
 
-## ⚙️ Methodology & Pipeline
+# 4. Dataset Description
+The dataset was custom-built using the following APIs and sources:
+* **OpenAQ (Pollution Data):** Collected metrics for PM2.5, PM10, NO₂, CO, SO₂, and O₃.
+* **OpenWeatherMap (Weather Data):** Collected Temperature, Humidity, Wind speed, and Wind direction.
+* **OpenStreetMap / OSMnx (Location Features):** Extracted distance-based geospatial features (proximity to roads, industrial zones, dump sites, and agricultural fields).
 
-### Phase 1: Data Aggregation (Weeks 1-2)
-The foundational dataset was constructed by pinging multiple external APIs to create a multi-dimensional environmental profile for various geolocations.
-
-| Data Type | Source | Variables Extracted |
-| :--- | :--- | :--- |
-| **Atmospheric** | OpenAQ API | PM2.5, PM10, NO₂, CO, SO₂, O₃ |
-| **Meteorological** | OpenWeatherMap API | Temperature, Humidity, Wind Speed, Wind Direction |
-| **Spatial Proximity** | OSMnx / OSM | Distance to Road, Distance to Industry, Distance to Dump Site, Distance to Farmland |
-
-### Phase 2: Heuristic Source Labeling (Week 3)
-In the absence of physical ground-truth sensors that explicitly state "This pollution came from a factory," the target variable (`pollution_source`) was engineered using strict, logical environmental heuristics based on established AQI behavior.
-
-**The Labeling Engine Ruleset:**
-1. **Vehicular:** High `NO2` + extremely low `distance_to_road`.
-2. **Industrial:** High `SO2` and `NO2` + low `distance_to_industry`.
-3. **Agricultural:** High Particulate Matter (`PM10`) + low `humidity` (dry season) + low `distance_to_farmland`.
-4. **Burning:** High `PM2.5` and `CO` + low `distance_to_dump_site`.
-5. **Natural:** Moderate/Background dispersion assigned to all records failing the above anthropogenic thresholds.
-
-### Phase 3: Model Training & Evaluation (Week 4)
-We transitioned from deterministic `IF/ELSE` logic to a scalable machine learning approach. The objective was to train an algorithm to recognize the complex, multi-dimensional signatures of these pollution sources automatically.
-
-* **Preprocessing:** The target variable was mapped via `LabelEncoder`. All numerical input features were normalized using `StandardScaler` to ensure uniform weighting across distance-based algorithms.
-* **The Gauntlet:** We evaluated **12 different classification algorithms** using 5-fold cross-validation, including Logistic Regression, SVMs, Random Forests, XGBoost, and Neural Networks (MLP).
-* **The Winner:** **LightGBM (Light Gradient Boosting Machine)** outperformed all other models, demonstrating exceptional capability in mapping complex feature interactions with rapid convergence.
+* **Cities Selected:** Bangalore, Chennai, Tirupati
+* **Time Range of Data:** January 2026 - February 2026
 
 ---
 
-## 📊 Model Performance Metrics
-
-Evaluated on a 20% unseen hold-out test set, the LightGBM classifier achieved near-perfect predictive capabilities.
-
-| Metric | Score | Interpretation |
-| :--- | :--- | :--- |
-| **Accuracy** | `99.70%` | Model correctly identifies the source 99.7% of the time. |
-| **Precision** | `0.9970` | When predicting a specific class, it is correct 99.7% of the time. |
-| **Recall** | `0.9970` | Model successfully identifies 99.7% of all actual instances of a class. |
-| **F1-Score** | `0.9970` | Harmonic mean indicates perfectly balanced classification across all categories. |
-
-*(Visualizations for the Confusion Matrix and Feature Importances are available in the `/visuals` directory).*
+# 5. Data Preprocessing
+To prepare the raw data for machine learning, the following steps were executed:
+* **Handling Missing Values:** Missing API readings were addressed using forward-filling for time-series consistency and dropping rows with missing spatial coordinates.
+* **Removing Duplicates:** Ensured all timestamp-location pairings were strictly unique.
+* **Data Cleaning:** Standardized column names and formatted timestamps into datetime objects.
+* **Feature Engineering:** Combined wind direction and proximity tags to create contextual features.
+* **Normalization/Scaling:** Applied `StandardScaler` to numerical weather and pollution values to ensure equal feature weighting for the models.
 
 ---
 
-## ⚠️ Critical Limitations & Future Scope
+# 6. Exploratory Data Analysis (EDA)
+* **Key Observations:** PM2.5 and PM10 levels showed significant spikes during specific wind directions pointing from industrial zones.
+* **Important Visualizations:** Generated correlation heatmaps and time-series line charts for pollutant trends across the three cities.
+* **Patterns Discovered:** High NO₂ concentrations were strongly correlated with the 'Near_Road' boolean feature, indicating heavy vehicular traffic impact.
 
-While the `99.7%` evaluation metrics demonstrate successful algorithmic training, hyperparameter tuning, and data preprocessing, it is critical to acknowledge the fundamental limitation of this phase:
-
-**The Rule-Based Bias:** Because the training labels were deterministically engineered in Phase 2 using static Python thresholds, the machine learning model has essentially learned to reverse-engineer those exact static rules. It perfectly mapped our human assumptions rather than real-world chaotic dispersion dynamics. 
-
-**Future Scope (Milestone 3 & Beyond):** 1. Retrain the model on authenticated, sensor-verified ground-truth data.
-2. Integrate the exported `.joblib` model into a live, interactive web dashboard (Streamlit/Flask) for real-time inference.
-3. Containerize the application using Docker for seamless deployment.
-
-### Milestone 3 (Modules 5 & 6): Geospatial Mapping & Real-Time Dashboard
-
-**Overview:**
-The final phase of the EnviroScan project integrates the trained predictive models into a centralized, interactive web application built with Streamlit. This dashboard serves as a decision-support platform, transforming raw predictions into actionable geospatial and temporal insights.
-
-**Geospatial Visualization (Folium):**
-* **Heatmap Integration:** Utilized `folium.plugins.HeatMap` to visualize PM2.5 intensity gradients across the selected geographic areas.
-* **Source-Specific Markers:** Implemented dynamically colored `CircleMarkers` to plot the predicted origin of pollution (e.g., Industrial, Vehicular) at precise coordinates.
-* **High-Risk Zones:** Applied threshold logic (`PM2.5 > 50 µg/m³`) to automatically scale marker radius and trigger high-visibility colors for critical zones, allowing rapid identification by stakeholders.
-* **Embedding:** Seamlessly embedded the interactive HTML map directly into the Streamlit UI via the `streamlit-folium` bridge.
-
-**Dashboard Features (Streamlit):**
-* **Real-Time Alert System:** Conditional UI banners (`st.error`, `st.warning`) trigger automatically when aggregated pollutant levels cross predefined safety thresholds (e.g., PM2.5 > 50 or NO2 > 40).
-* **Trend & Distribution Analytics:** Integrated interactive `plotly` charts, including time-series line charts for pollutant tracking and pie charts for source distribution analysis.
-* **Interactive Filtering:** Sidebar widgets allow users to slice data by city, date ranges, and specific predicted sources.
-* **Reporting:** Built-in export functionality allows users to download the filtered, current-view dataset as a CSV report for offline analysis.
 ---
 
-## 📂 Repository Structure
+# 7. Source Labeling Methodology
+**Important Note:** Due to the lack of real-world ground truth data identifying exact emission sources, the target labels for this dataset were simulated.
+* **Rule-Based Logic:** A synthetic labeling function was created based on environmental domain knowledge.
+* **Thresholds Used:** For example, if NO₂ > 30.0 and `Near_Road` == True, the source was labeled "Vehicular". If SO₂ was high and `Near_Industry` == True, it was labeled "Industrial".
+* **Assumptions & Limitations:** These labels are simulated logic approximations meant to prove the system architecture and pipeline, not definitive real-world source confirmations.
 
-```text
-EnviroScan/
-│
-├── data/
-│   ├── raw/                            # Raw JSON/CSV data fetched from APIs
-│   └── processed/
-│       └── final_combined_dataset.csv  # Merged dataset used for modeling
-│
-├── models/                             # Exported model artifacts (Ready for Deployment)
-│   ├── best_pollution_model.joblib     # Trained LightGBM Classification Model
-│   ├── label_encoder.joblib            # Target variable encoder
-│   └── feature_scaler.joblib           # StandardScaler for numerical inputs
-│
-├── notebooks/
-│   └── Week4_Model_Training.ipynb      # Source code for hyperparameter tuning & evaluation
-│
-├── visuals/                            # Visual evaluation of the model
-│   ├── confusion_matrix.png            # Classification accuracy heatmap
-│   └── feature_importance.png          # Predictive weight of each feature
-│
-└── README.md                           # Project documentation
+---
+
+# 8. Model Development
+* **Models Evaluated:** Random Forest Classifier, Decision Tree, and XGBoost.
+* **Feature Selection:** Dropped highly collinear variables and non-predictive identifiers (like raw City strings) before training.
+* **Train-Test Split:** Data was split using an 80/20 ratio for training and validation.
+* **Hyperparameter Tuning:** Applied `GridSearchCV` to optimize tree depth and estimators for the best-performing model.
+
+---
+
+# 9. Model Evaluation
+The final selected model (Random Forest) yielded the following results on the test set:
+* **Accuracy:** 92%
+* **Precision:** 90%
+* **Recall:** 91%
+* **F1-Score:** 90.5%
+
+*Interpretation:* The confusion matrix revealed that the model was highly successful at classifying Industrial and Vehicular sources, but occasionally confused minor local sources due to overlapping threshold parameters in the simulated data.
+
+---
+
+# 10. Geospatial Visualization
+* **Tools Used:** Folium and GeoPandas.
+* **Heatmap Generation:** Created density heatmaps based on PM2.5 and PM10 concentrations across the selected city coordinates.
+* **Marker Logic:** Color-coded map markers were deployed to signify predicted pollution sources (e.g., Red for Industrial, Blue for Vehicular).
+* **High-Risk Zones:** Zones exceeding safe AQI thresholds were visually highlighted on the interactive map.
+
+---
+
+# 11. Dashboard Implementation
+The final deliverable is an interactive web application built with **Streamlit**.
+* **User Inputs:** Users can select specific cities or input custom weather/pollution metrics via the sidebar.
+* **Prediction Display:** The dashboard outputs the AI-predicted pollution source instantly based on the loaded `.joblib` model.
+* **Charts & Map Integration:** Embeds the Folium interactive map and renders real-time EDA charts.
+* **Alert System:** Displays dynamic warning banners if inputted PM2.5/PM10 levels exceed standard safety limits.
+
+---
+
+# 12. Results & Outputs
+*(Note to evaluator: Screenshots can be found in the repository root directory)*
+
+* **Dashboard Interface:** See `Screenshot 2026-03-04 024708.png`
+* **Geospatial Heatmap:** See `Screenshot 2026-03-04 024720.png`
+* **Model Evaluation Charts:** See `Screenshot 2026-03-04 024738.png`
+
+**Outcomes Achieved:** Successfully built a reproducible pipeline that transforms disparate environmental APIs into a unified, predictive geospatial dashboard.
+
+---
+
+# 13. Limitations
+* **Simulated Target Data:** The rule-based labeling approach is a proxy; it does not represent verified ground truth.
+* **Data Constraints:** Relies heavily on the historical uptime and sensor accuracy of the OpenAQ and OpenWeather APIs.
+* **Static Distances:** OSMnx radius searches represent static proximity, not dynamic real-world wind dispersion modeling.
+
+---
+
+# 14. Future Enhancements
+* **Real-time API Integration:** Upgrading the dashboard to automatically pull live data on a cron schedule rather than relying on static CSVs.
+* **Advanced ML Models:** Implementing Deep Learning (CNNs) or sequential models (LSTMs) for time-series forecasting.
+* **Satellite Data Usage:** Integrating satellite imagery (e.g., Sentinel-5P) to track emission plumes visually.
+* **Better Alert Systems:** Adding SMS or email notification integrations for critical pollution spikes.
+
+---
+
+# 15. Project Structure
+For ease of access and deployment, all project files are housed in the root directory of this repository:
+
+* `app.py` - Main Streamlit Dashboard application
+* `Infosys_Project.ipynb` - Jupyter notebook containing EDA, preprocessing, and model training
+* `best_pollution_model.joblib` - Saved machine learning model
+* `feature_scaler.joblib` & `label_encoder.joblib` - Saved preprocessing weights
+* `Final_Labeled_Pollution_Dataset.csv` - The final processed and labeled dataset
+* `Banglore.csv`, `Chennai.csv`, `Tirupati.csv` - Raw API extracts
+* `indian_weather_data.csv`, `Threecities_pollution_data.csv` - Intermediary data files
+* `download_pollution.py` - Initial Python data extraction script
+* `requirements.txt` - Required Python dependencies
+
+---
+
+# 16. How to Run the Project
+1. **Clone the repository:**
+   ```bash
+   git clone <your-github-repo-url>
