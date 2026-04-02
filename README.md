@@ -553,6 +553,3 @@ Integrated M.Tech in Artificial Intelligence
 VIT Bhopal
 
 
-A couple of quick fixes before you paste it:
-- In your repo structure, make sure `map/` is shown correctly if it is inside `scripts/` or outside it. Use the actual folder layout from your project.
-- Add your screenshots under `Results & Outputs` in GitHub using image links or drag-and-drop in the README editor.
