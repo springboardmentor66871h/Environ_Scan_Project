@@ -6,3 +6,6 @@ plotly
 joblib
 folium
 streamlit-folium
+matplotlib
+geopy
+pyttsx3
